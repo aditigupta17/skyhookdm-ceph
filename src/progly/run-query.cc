@@ -148,6 +148,7 @@ int main(int argc, char **argv)
     ("index-cols", po::value<std::string>(&index_cols)->default_value(""), project_help_msg.c_str())
     ("index2-cols", po::value<std::string>(&index2_cols)->default_value(""), project_help_msg.c_str())
     ("project", po::value<std::string>(&project_cols)->default_value(Tables::PROJECT_DEFAULT), project_help_msg.c_str())
+    ("groupby", po::value<std::string>(&groupby_cols)->default_value(""), project_help_msg.c_str())
     ("index-preds", po::value<std::string>(&index_preds)->default_value(""), select_help_msg.c_str())
     ("index2-preds", po::value<std::string>(&index2_preds)->default_value(""), select_help_msg.c_str())
     ("select", po::value<std::string>(&query_preds)->default_value(Tables::SELECT_DEFAULT), select_help_msg.c_str())
@@ -324,6 +325,7 @@ int main(int argc, char **argv)
     boost::trim(index_cols);
     boost::trim(index2_cols);
     boost::trim(project_cols);
+    boost::trim(groupby_cols);
     boost::trim(query_preds);
     boost::trim(index_preds);
     boost::trim(index2_preds);
@@ -337,6 +339,7 @@ int main(int argc, char **argv)
     boost::to_upper(index_cols);
     boost::to_upper(index2_cols);
     boost::to_upper(project_cols);
+    boost::to_upper(groupby_cols);
     boost::to_upper(trans_format_str);
     boost::to_upper(client_format_str);
 
@@ -404,6 +407,11 @@ int main(int argc, char **argv)
     sky_idx2_preds = predsFromString(sky_tbl_schema, index2_preds);
 
     // verify and set the query schema, check for select *
+
+    // Check if --groupby is working
+    if(groupby_cols == "") cout << "=========\nGROUPBY arg not passed\n=========\n";
+    else cout << "=========\n" << groupby_cols << "\n=========\n";
+
     if (project_cols == PROJECT_DEFAULT) {
         for(auto it=sky_tbl_schema.begin(); it!=sky_tbl_schema.end(); ++it) {
             col_info ci(*it);  // deep copy

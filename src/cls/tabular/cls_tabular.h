@@ -116,7 +116,7 @@ struct query_op {
 
   // query parameters
   std::string query;   // query type TODO: remove
-  bool groupby;
+  //bool groupby;
   bool debug;
   bool fastpath;
   bool index_read;
@@ -126,7 +126,7 @@ struct query_op {
   int index_plan_type;
   int index_batch_size;
   int result_format;  // SkyFormatType enum
-  std::string groupby_schema;
+  //std::string groupby_schema;
   std::string db_schema_name;
   std::string table_name;
   std::string data_schema;
@@ -144,7 +144,7 @@ struct query_op {
     ENCODE_START(1, 1, bl);
     ::encode(debug, bl);
     ::encode(query, bl);
-    ::encode(groupby, bl);
+    //::encode(groupby, bl);
     ::encode(fastpath, bl);
     ::encode(index_read, bl);
     ::encode(mem_constrain, bl);
@@ -153,7 +153,7 @@ struct query_op {
     ::encode(index_plan_type, bl);
     ::encode(index_batch_size, bl);
     ::encode(result_format, bl);
-    ::encode(groupby_schema, bl);
+    //::encode(groupby_schema, bl);
     ::encode(db_schema_name, bl);
     ::encode(table_name, bl);
     ::encode(data_schema, bl);
@@ -171,7 +171,7 @@ struct query_op {
     DECODE_START(1, bl);
     ::decode(debug, bl);
     ::decode(query, bl);
-    ::decode(groupby, bl);
+    //::decode(groupby, bl);
     ::decode(fastpath, bl);
     ::decode(index_read, bl);
     ::decode(mem_constrain, bl);
@@ -180,7 +180,7 @@ struct query_op {
     ::decode(index_plan_type, bl);
     ::decode(index_batch_size, bl);
     ::decode(result_format, bl);
-    ::decode(groupby_schema, bl);
+    //::decode(groupby_schema, bl);
     ::decode(db_schema_name, bl);
     ::decode(table_name, bl);
     ::decode(data_schema, bl);
@@ -197,7 +197,7 @@ struct query_op {
     std::string s;
     s.append("query_op:");
     s.append(" .debug=" + std::to_string(debug));
-    s.append(" .groupby=" + std::to_string(groupby));
+    //s.append(" .groupby=" + std::to_string(groupby));
     s.append(" .fastpath=" + std::to_string(fastpath));
     s.append(" .index_read=" + std::to_string(index_read));
     s.append(" .index_type=" + std::to_string(index_type));
@@ -205,7 +205,7 @@ struct query_op {
     s.append(" .index_plan_type=" + std::to_string(index_plan_type));
     s.append(" .index_batch_size=" + std::to_string(index_batch_size));
     s.append(" .result_format=" + std::to_string(result_format));
-    s.append(" .groupby_schema=" + std::to_string(groupby_schema));
+    //s.append(" .groupby_schema=" + std::to_string(groupby_schema));
     s.append(" .db_schema_name=" + db_schema_name);
     s.append(" .table_name=" + table_name);
     s.append(" .data_schema=" + data_schema);

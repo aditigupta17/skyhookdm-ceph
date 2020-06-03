@@ -78,6 +78,7 @@ extern std::string comment_regex;
 
 // query_op params new
 extern bool debug;
+extern bool qop_groupby;
 extern bool qop_fastpath;
 extern bool qop_index_read;
 extern bool qop_mem_constrain;
@@ -86,6 +87,7 @@ extern int qop_index2_type;
 extern int qop_index_plan_type;
 extern int qop_index_batch_size;
 extern int qop_result_format;  // SkyFormatType enum
+extern std::string qop_groupby_schema;
 extern std::string qop_db_schema_name;
 extern std::string qop_table_name;
 extern std::string qop_data_schema;
@@ -118,6 +120,7 @@ extern std::string qop_tree_name;
 // other exec flags
 extern bool runstats;
 extern std::string project_cols;
+extern std::string groupby_cols;
 
 // for debugging, prints full record header and metadata
 extern bool print_verbose;

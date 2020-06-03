@@ -47,6 +47,7 @@ std::string comment_regex;
 // query_op params new
 bool debug;
 bool qop_fastpath;
+bool qop_groupby;
 bool qop_index_read;
 bool qop_mem_constrain;
 int qop_index_type;
@@ -54,6 +55,7 @@ int qop_index2_type;
 int qop_index_plan_type;
 int qop_index_batch_size;
 int qop_result_format;   // SkyFormatType enum
+std::string qop_groupby_schema;
 std::string qop_db_schema_name;
 std::string qop_table_name;
 std::string qop_data_schema;
@@ -87,6 +89,7 @@ std::string qop_tree_name;
 // other exec flags
 bool runstats;
 std::string project_cols;
+std::string groupby_cols;
 
 // prints full record header and metadata
 bool print_verbose;
