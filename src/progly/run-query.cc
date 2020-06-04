@@ -409,8 +409,13 @@ int main(int argc, char **argv)
     // verify and set the query schema, check for select *
 
     // Check if --groupby is working
-    if(groupby_cols == "") cout << "=========\nGROUPBY arg not passed\n=========\n";
-    else cout << "=========\n" << groupby_cols << "\n=========\n";
+    if (debug) {
+        std::cout << "DEBUG: run-query: groupby=";
+        if(groupby_cols == "") 
+          cout << "GROUPBY arg not passed" << std::endl;
+        else 
+          cout << groupby_cols << std::endl;
+    }
 
     if (project_cols == PROJECT_DEFAULT) {
         for(auto it=sky_tbl_schema.begin(); it!=sky_tbl_schema.end(); ++it) {
@@ -425,6 +430,42 @@ int main(int argc, char **argv)
                 fastpath = true;
         }
     } else {
+        if (groupby_cols != "") {
+          // (?) groupby columns should also be projected
+          std::string columns;
+          std::vector<std::string> project_columns;
+          std::vector<std::string> groupby_columns;
+          std::vector<std::string> final_projected_columns;
+
+          boost::split(project_columns, project_cols, boost::is_any_of(","), boost::token_compress_on);
+          boost::split(groupby_columns, groupby_cols, boost::is_any_of(","), boost::token_compress_on);
+
+          final_projected_columns = project_columns;
+          for(auto s : groupby_columns) {
+            bool is_project_col = false;
+            for(auto t : project_columns) {
+              if(s == t) {
+                is_project_col = true;
+                break;
+              }
+            } 
+            if(!is_project_col) 
+              final_projected_columns.push_back(s);
+          }          
+          for (auto col = final_projected_columns.begin();
+               col != final_projected_columns.end(); ++col) {
+                  columns += (*col);
+                  columns.push_back(',');
+               }
+
+          columns.pop_back();
+          project_cols = columns;
+        }
+
+        if (debug) {
+          std::cout << "DEBUG: run-query: project_cols=" << project_cols << std::endl;
+        }
+
         if (hasAggPreds(sky_qry_preds)) {
             for (auto it = sky_qry_preds.begin();
                  it != sky_qry_preds.end(); ++it) {
