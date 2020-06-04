@@ -389,6 +389,9 @@ int main(int argc, char **argv)
     // verify and set the table schema, needed to create other preds/schemas
     sky_tbl_schema = schemaFromString(data_schema);
 
+    // verify and set the groupby schema
+    sky_groupby_schema = schemaFromColNames(sky_tbl_schema, groupby_cols);
+
     // verify and set the index schema
     sky_idx_schema = schemaFromColNames(sky_tbl_schema, index_cols);
     sky_idx2_schema = schemaFromColNames(sky_tbl_schema, index2_cols);
@@ -638,6 +641,7 @@ int main(int argc, char **argv)
     qop_table_name = table_name;
     qop_data_schema = schemaToString(sky_tbl_schema);
     qop_query_schema = schemaToString(sky_qry_schema);
+    qop_groupby_schema = schemaToString(sky_groupby_schema);
     qop_index_schema = schemaToString(sky_idx_schema);
     qop_index2_schema = schemaToString(sky_idx2_schema);
     qop_query_preds = predsToString(sky_qry_preds, sky_tbl_schema);
@@ -664,6 +668,7 @@ int main(int argc, char **argv)
             cout << "DEBUG: run-query: qop_table_name=" << qop_table_name << endl;
             cout << "DEBUG: run-query: qop_data_schema=\n" << qop_data_schema << endl;
             cout << "DEBUG: run-query: qop_query_schema=\n" << qop_query_schema << endl;
+            cout << "DEBUG: run-query: qop_groupby_schema=\n" << qop_groupby_schema << endl;
             cout << "DEBUG: run-query: qop_index_schema=\n" << qop_index_schema << endl;
             cout << "DEBUG: run-query: qop_index2_schema=\n" << qop_index2_schema << endl;
             cout << "DEBUG: run-query: qop_query_preds=" << qop_query_preds << endl;

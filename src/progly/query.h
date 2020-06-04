@@ -131,6 +131,7 @@ extern int skyhook_output_format;  // SkyFormatType enum
 // to convert strings <=> skyhook data structs
 extern Tables::schema_vec sky_tbl_schema;
 extern Tables::schema_vec sky_qry_schema;
+extern Tables::schema_vec sky_groupby_schema;
 extern Tables::schema_vec sky_idx_schema;
 extern Tables::schema_vec sky_idx2_schema;
 extern Tables::predicate_vec sky_qry_preds;

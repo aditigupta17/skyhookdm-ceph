@@ -126,7 +126,7 @@ struct query_op {
   int index_plan_type;
   int index_batch_size;
   int result_format;  // SkyFormatType enum
-  //std::string groupby_schema;
+  std::string groupby_schema;
   std::string db_schema_name;
   std::string table_name;
   std::string data_schema;
@@ -153,7 +153,7 @@ struct query_op {
     ::encode(index_plan_type, bl);
     ::encode(index_batch_size, bl);
     ::encode(result_format, bl);
-    //::encode(groupby_schema, bl);
+    ::encode(groupby_schema, bl);
     ::encode(db_schema_name, bl);
     ::encode(table_name, bl);
     ::encode(data_schema, bl);
@@ -180,7 +180,7 @@ struct query_op {
     ::decode(index_plan_type, bl);
     ::decode(index_batch_size, bl);
     ::decode(result_format, bl);
-    //::decode(groupby_schema, bl);
+    ::decode(groupby_schema, bl);
     ::decode(db_schema_name, bl);
     ::decode(table_name, bl);
     ::decode(data_schema, bl);
@@ -205,10 +205,10 @@ struct query_op {
     s.append(" .index_plan_type=" + std::to_string(index_plan_type));
     s.append(" .index_batch_size=" + std::to_string(index_batch_size));
     s.append(" .result_format=" + std::to_string(result_format));
-    //s.append(" .groupby_schema=" + std::to_string(groupby_schema));
     s.append(" .db_schema_name=" + db_schema_name);
     s.append(" .table_name=" + table_name);
     s.append(" .data_schema=" + data_schema);
+    s.append(" .groupby_schema=" + groupby_schema);
     s.append(" .query_schema=" + query_schema);
     s.append(" .index_schema=" + index_schema);
     s.append(" .index2_schema=" + index2_schema);

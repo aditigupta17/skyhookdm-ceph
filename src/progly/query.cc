@@ -100,6 +100,7 @@ int skyhook_output_format;  // SkyFormatType enum
 // to convert strings <=> skyhook data structs
 Tables::schema_vec sky_tbl_schema;
 Tables::schema_vec sky_qry_schema;
+Tables::schema_vec sky_groupby_schema;
 Tables::schema_vec sky_idx_schema;
 Tables::schema_vec sky_idx2_schema;
 Tables::predicate_vec sky_qry_preds;
