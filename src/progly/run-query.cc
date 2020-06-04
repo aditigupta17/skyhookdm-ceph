@@ -929,6 +929,7 @@ int main(int argc, char **argv)
         op.index_plan_type = qop_index_plan_type;
         op.index_batch_size = qop_index_batch_size;
         op.result_format = qop_result_format;
+        op.groupby_schema = qop_groupby_schema;
         op.db_schema_name = qop_db_schema_name;
         op.table_name = qop_table_name;
         op.data_schema = qop_data_schema;
