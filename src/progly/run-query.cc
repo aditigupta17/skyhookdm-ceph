@@ -30,7 +30,6 @@ int main(int argc, char **argv)
 
   // user/client input, trimmed and encoded to skyhook structs for query_op
   // defaults set below via boost::program_options
-  //bool debug;
   bool index_read;
   bool index_create;
   bool mem_constrain;
@@ -47,6 +46,7 @@ int main(int argc, char **argv)
   std::string index_schema;
   std::string index2_schema;
   std::string query_preds;
+  std::string groupby_cols;
   std::string index_preds;
   std::string index2_preds;
   std::string index_cols;
@@ -149,6 +149,7 @@ int main(int argc, char **argv)
     ("index2-cols", po::value<std::string>(&index2_cols)->default_value(""), project_help_msg.c_str())
     ("project", po::value<std::string>(&project_cols)->default_value(Tables::PROJECT_DEFAULT), project_help_msg.c_str())
     ("groupby", po::value<std::string>(&groupby_cols)->default_value(""), project_help_msg.c_str())
+    // ("orderby", po::value<std::string>(&orderby_cols)->default_value(""), project_help_msg.c_str())
     ("index-preds", po::value<std::string>(&index_preds)->default_value(""), select_help_msg.c_str())
     ("index2-preds", po::value<std::string>(&index2_preds)->default_value(""), select_help_msg.c_str())
     ("select", po::value<std::string>(&query_preds)->default_value(Tables::SELECT_DEFAULT), select_help_msg.c_str())
@@ -325,8 +326,8 @@ int main(int argc, char **argv)
     boost::trim(index_cols);
     boost::trim(index2_cols);
     boost::trim(project_cols);
-    boost::trim(groupby_cols);
     boost::trim(query_preds);
+    boost::trim(groupby_cols);
     boost::trim(index_preds);
     boost::trim(index2_preds);
     boost::trim(text_index_delims);
@@ -389,9 +390,6 @@ int main(int argc, char **argv)
     // verify and set the table schema, needed to create other preds/schemas
     sky_tbl_schema = schemaFromString(data_schema);
 
-    // verify and set the groupby schema
-    sky_groupby_schema = schemaFromColNames(sky_tbl_schema, groupby_cols);
-
     // verify and set the index schema
     sky_idx_schema = schemaFromColNames(sky_tbl_schema, index_cols);
     sky_idx2_schema = schemaFromColNames(sky_tbl_schema, index2_cols);
@@ -433,38 +431,6 @@ int main(int argc, char **argv)
                 fastpath = true;
         }
     } else {
-        if (groupby_cols != "") {
-          // (?) groupby columns should also be projected
-          std::string columns;
-          std::vector<std::string> project_columns;
-          std::vector<std::string> groupby_columns;
-          std::vector<std::string> final_projected_columns;
-
-          boost::split(project_columns, project_cols, boost::is_any_of(","), boost::token_compress_on);
-          boost::split(groupby_columns, groupby_cols, boost::is_any_of(","), boost::token_compress_on);
-
-          final_projected_columns = project_columns;
-          for(auto s : groupby_columns) {
-            bool is_project_col = false;
-            for(auto t : project_columns) {
-              if(s == t) {
-                is_project_col = true;
-                break;
-              }
-            } 
-            if(!is_project_col) 
-              final_projected_columns.push_back(s);
-          }          
-          for (auto col = final_projected_columns.begin();
-               col != final_projected_columns.end(); ++col) {
-                  columns += (*col);
-                  columns.push_back(',');
-               }
-
-          columns.pop_back();
-          project_cols = columns;
-        }
-
         if (debug) {
           std::cout << "DEBUG: run-query: project_cols=" << project_cols << std::endl;
         }
@@ -641,12 +607,12 @@ int main(int argc, char **argv)
     qop_table_name = table_name;
     qop_data_schema = schemaToString(sky_tbl_schema);
     qop_query_schema = schemaToString(sky_qry_schema);
-    qop_groupby_schema = schemaToString(sky_groupby_schema);
     qop_index_schema = schemaToString(sky_idx_schema);
     qop_index2_schema = schemaToString(sky_idx2_schema);
     qop_query_preds = predsToString(sky_qry_preds, sky_tbl_schema);
     qop_index_preds = predsToString(sky_idx_preds, sky_tbl_schema);
     qop_index2_preds = predsToString(sky_idx2_preds, sky_tbl_schema);
+    qop_groupby_cols = groupby_cols;
     qop_result_format = skyhook_output_format;
     idx_op_idx_unique = idx_unique;
     idx_op_batch_size = index_batch_size;
@@ -668,10 +634,10 @@ int main(int argc, char **argv)
             cout << "DEBUG: run-query: qop_table_name=" << qop_table_name << endl;
             cout << "DEBUG: run-query: qop_data_schema=\n" << qop_data_schema << endl;
             cout << "DEBUG: run-query: qop_query_schema=\n" << qop_query_schema << endl;
-            cout << "DEBUG: run-query: qop_groupby_schema=\n" << qop_groupby_schema << endl;
             cout << "DEBUG: run-query: qop_index_schema=\n" << qop_index_schema << endl;
             cout << "DEBUG: run-query: qop_index2_schema=\n" << qop_index2_schema << endl;
             cout << "DEBUG: run-query: qop_query_preds=" << qop_query_preds << endl;
+            cout << "DEBUG: run-query: qop_groupby_cols=" << qop_groupby_cols << endl;
             cout << "DEBUG: run-query: qop_index_preds=" << qop_index_preds << endl;
             cout << "DEBUG: run-query: qop_index2_preds=" << qop_index2_preds << endl;
             cout << "DEBUG: run-query: qop_result_format=" << qop_result_format << endl;
@@ -929,7 +895,6 @@ int main(int argc, char **argv)
         op.index_plan_type = qop_index_plan_type;
         op.index_batch_size = qop_index_batch_size;
         op.result_format = qop_result_format;
-        op.groupby_schema = qop_groupby_schema;
         op.db_schema_name = qop_db_schema_name;
         op.table_name = qop_table_name;
         op.data_schema = qop_data_schema;
@@ -937,6 +902,7 @@ int main(int argc, char **argv)
         op.index_schema = qop_index_schema;
         op.index2_schema = qop_index2_schema;
         op.query_preds = qop_query_preds;
+        op.groupby_cols = qop_groupby_cols;
         op.index_preds = qop_index_preds;
         op.index2_preds = qop_index2_preds;
         ceph::bufferlist inbl;

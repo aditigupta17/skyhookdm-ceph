@@ -116,7 +116,6 @@ struct query_op {
 
   // query parameters
   std::string query;   // query type TODO: remove
-  //bool groupby;
   bool debug;
   bool fastpath;
   bool index_read;
@@ -126,7 +125,6 @@ struct query_op {
   int index_plan_type;
   int index_batch_size;
   int result_format;  // SkyFormatType enum
-  std::string groupby_schema;
   std::string db_schema_name;
   std::string table_name;
   std::string data_schema;
@@ -134,6 +132,7 @@ struct query_op {
   std::string index_schema;
   std::string index2_schema;
   std::string query_preds;
+  std::string groupby_cols;
   std::string index_preds;
   std::string index2_preds;
 
@@ -144,7 +143,6 @@ struct query_op {
     ENCODE_START(1, 1, bl);
     ::encode(debug, bl);
     ::encode(query, bl);
-    //::encode(groupby, bl);
     ::encode(fastpath, bl);
     ::encode(index_read, bl);
     ::encode(mem_constrain, bl);
@@ -153,7 +151,6 @@ struct query_op {
     ::encode(index_plan_type, bl);
     ::encode(index_batch_size, bl);
     ::encode(result_format, bl);
-    ::encode(groupby_schema, bl);
     ::encode(db_schema_name, bl);
     ::encode(table_name, bl);
     ::encode(data_schema, bl);
@@ -161,6 +158,7 @@ struct query_op {
     ::encode(index_schema, bl);
     ::encode(index2_schema, bl);
     ::encode(query_preds, bl);
+    ::encode(groupby_cols, bl);
     ::encode(index_preds, bl);
     ::encode(index2_preds, bl);
     ENCODE_FINISH(bl);
@@ -171,7 +169,6 @@ struct query_op {
     DECODE_START(1, bl);
     ::decode(debug, bl);
     ::decode(query, bl);
-    //::decode(groupby, bl);
     ::decode(fastpath, bl);
     ::decode(index_read, bl);
     ::decode(mem_constrain, bl);
@@ -180,7 +177,6 @@ struct query_op {
     ::decode(index_plan_type, bl);
     ::decode(index_batch_size, bl);
     ::decode(result_format, bl);
-    ::decode(groupby_schema, bl);
     ::decode(db_schema_name, bl);
     ::decode(table_name, bl);
     ::decode(data_schema, bl);
@@ -188,6 +184,7 @@ struct query_op {
     ::decode(index_schema, bl);
     ::decode(index2_schema, bl);
     ::decode(query_preds, bl);
+    ::decode(groupby_cols, bl);
     ::decode(index_preds, bl);
     ::decode(index2_preds, bl);
     DECODE_FINISH(bl);
@@ -197,7 +194,6 @@ struct query_op {
     std::string s;
     s.append("query_op:");
     s.append(" .debug=" + std::to_string(debug));
-    //s.append(" .groupby=" + std::to_string(groupby));
     s.append(" .fastpath=" + std::to_string(fastpath));
     s.append(" .index_read=" + std::to_string(index_read));
     s.append(" .index_type=" + std::to_string(index_type));
@@ -208,11 +204,11 @@ struct query_op {
     s.append(" .db_schema_name=" + db_schema_name);
     s.append(" .table_name=" + table_name);
     s.append(" .data_schema=" + data_schema);
-    s.append(" .groupby_schema=" + groupby_schema);
     s.append(" .query_schema=" + query_schema);
     s.append(" .index_schema=" + index_schema);
     s.append(" .index2_schema=" + index2_schema);
     s.append(" .query_preds=" + query_preds);
+    s.append(" .groupby_cols=" + groupby_cols);
     s.append(" .index_preds=" + index_preds);
     s.append(" .index2_preds=" + index2_preds);
     return s;
