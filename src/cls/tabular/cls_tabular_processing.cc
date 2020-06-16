@@ -10,6 +10,8 @@
 
 #include "cls_tabular_processing.h"
 
+#include "cls_tabular_utils.h"
+#include "iostream"
 
 namespace Tables {
 
@@ -50,6 +52,32 @@ int processSkyFb(
         if (it->idx > col_idx_max)
             col_idx_max = it->idx;
     }
+
+    // =====================================================
+    // STEP - 1:
+    // 1. segregate preds as agg and non_agg
+    // 2. apply non_agg preds to rows and obtain passed rows
+    // =====================================================
+
+    predicate_vec agg_preds;
+    predicate_vec non_agg_preds;
+
+    std::cout << "\nInside cls_tabular_processing.cc\nPrinting preds:\n";
+    for (auto p : preds) 
+        std::cout << "id= " << p->colIdx() << " is_global_agg= " << p->isGlobalAgg() << "\n";
+        
+    for (auto p : preds) {
+        if(p->isGlobalAgg()) agg_preds.push_back(p);
+        else non_agg_preds.push_back(p);
+    }
+
+    std::cout << "\nInside cls_tabular_processing.cc\nPrinting agg preds:\n\n";
+    for (auto p : agg_preds) 
+        std::cout << "id= " << p->colIdx() << " is_global_agg= " << p->isGlobalAgg() << "\n";
+    
+    std::cout << "\nInside cls_tabular_processing.cc\nPrinting non-agg preds:\n\n";
+    for (auto p : non_agg_preds) 
+        std::cout << "id= " << p->colIdx() << " is_global_agg= " << p->isGlobalAgg() << "\n";
 
     bool project_all = std::equal(data_schema.begin(), data_schema.end(),
                                   query_schema.begin(), compareColInfo);
