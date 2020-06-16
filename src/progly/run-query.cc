@@ -47,6 +47,7 @@ int main(int argc, char **argv)
   std::string index2_schema;
   std::string query_preds;
   std::string groupby_cols;
+  std::string orderby_cols;
   std::string index_preds;
   std::string index2_preds;
   std::string index_cols;
@@ -149,7 +150,7 @@ int main(int argc, char **argv)
     ("index2-cols", po::value<std::string>(&index2_cols)->default_value(""), project_help_msg.c_str())
     ("project", po::value<std::string>(&project_cols)->default_value(Tables::PROJECT_DEFAULT), project_help_msg.c_str())
     ("groupby", po::value<std::string>(&groupby_cols)->default_value(""), project_help_msg.c_str())
-    // ("orderby", po::value<std::string>(&orderby_cols)->default_value(""), project_help_msg.c_str())
+    ("orderby", po::value<std::string>(&orderby_cols)->default_value(""), project_help_msg.c_str())
     ("index-preds", po::value<std::string>(&index_preds)->default_value(""), select_help_msg.c_str())
     ("index2-preds", po::value<std::string>(&index2_preds)->default_value(""), select_help_msg.c_str())
     ("select", po::value<std::string>(&query_preds)->default_value(Tables::SELECT_DEFAULT), select_help_msg.c_str())
@@ -328,6 +329,7 @@ int main(int argc, char **argv)
     boost::trim(project_cols);
     boost::trim(query_preds);
     boost::trim(groupby_cols);
+    boost::trim(orderby_cols);
     boost::trim(index_preds);
     boost::trim(index2_preds);
     boost::trim(text_index_delims);
@@ -341,6 +343,7 @@ int main(int argc, char **argv)
     boost::to_upper(index2_cols);
     boost::to_upper(project_cols);
     boost::to_upper(groupby_cols);
+    boost::to_upper(orderby_cols);
     boost::to_upper(trans_format_str);
     boost::to_upper(client_format_str);
 
@@ -416,6 +419,15 @@ int main(int argc, char **argv)
           cout << "GROUPBY arg not passed" << std::endl;
         else 
           cout << groupby_cols << std::endl;
+    }
+
+    // Check if --orderby is working
+    if (debug) {
+        std::cout << "DEBUG: run-query: orderby=";
+        if(orderby_cols == "") 
+          cout << "ORDERBY arg not passed" << std::endl;                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      
+        else 
+          cout << orderby_cols << std::endl;
     }
 
     if (project_cols == PROJECT_DEFAULT) {
@@ -613,6 +625,7 @@ int main(int argc, char **argv)
     qop_index_preds = predsToString(sky_idx_preds, sky_tbl_schema);
     qop_index2_preds = predsToString(sky_idx2_preds, sky_tbl_schema);
     qop_groupby_cols = groupby_cols;
+    qop_orderby_cols = orderby_cols;
     qop_result_format = skyhook_output_format;
     idx_op_idx_unique = idx_unique;
     idx_op_batch_size = index_batch_size;
@@ -638,6 +651,7 @@ int main(int argc, char **argv)
             cout << "DEBUG: run-query: qop_index2_schema=\n" << qop_index2_schema << endl;
             cout << "DEBUG: run-query: qop_query_preds=" << qop_query_preds << endl;
             cout << "DEBUG: run-query: qop_groupby_cols=" << qop_groupby_cols << endl;
+            cout << "DEBUG: run-query: qop_orderby_cols=" << qop_orderby_cols << endl;
             cout << "DEBUG: run-query: qop_index_preds=" << qop_index_preds << endl;
             cout << "DEBUG: run-query: qop_index2_preds=" << qop_index2_preds << endl;
             cout << "DEBUG: run-query: qop_result_format=" << qop_result_format << endl;
@@ -903,6 +917,7 @@ int main(int argc, char **argv)
         op.index2_schema = qop_index2_schema;
         op.query_preds = qop_query_preds;
         op.groupby_cols = qop_groupby_cols;
+        op.orderby_cols = qop_orderby_cols;
         op.index_preds = qop_index_preds;
         op.index2_preds = qop_index2_preds;
         ceph::bufferlist inbl;

@@ -62,6 +62,7 @@ std::string qop_index_schema;
 std::string qop_index2_schema;
 std::string qop_query_preds;
 std::string qop_groupby_cols;
+std::string qop_orderby_cols;
 std::string qop_index_preds;
 std::string qop_index2_preds;
 
