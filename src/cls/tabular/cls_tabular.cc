@@ -984,6 +984,28 @@ int exec_query_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
     predicate_vec query_preds = predsFromString(data_schema,
                                                 op.query_preds);
 
+    // segregate query predicates into agg and non-agg
+    predicate_vec agg_preds;
+    predicate_vec non_agg_preds;
+
+    CLS_LOG(20, "\n\nPrinting preds:\n\n");
+    for (auto p : query_preds) 
+        CLS_LOG(20, "\nid=%d is_global_agg=%d \n", p->colIdx(), p->isGlobalAgg());
+        
+    for (auto p : query_preds) {
+        if(p->isGlobalAgg()) agg_preds.push_back(p);
+        else non_agg_preds.push_back(p);
+    }
+
+    CLS_LOG(20, "\n\nPrinting agg preds:\n\n");
+    for (auto p : agg_preds) 
+        CLS_LOG(20, "\nid=%d is_global_agg=%d \n", p->colIdx(), p->isGlobalAgg());
+
+    CLS_LOG(20, "\n\nPrinting non-agg preds:\n\n");
+    for (auto p : non_agg_preds) 
+        CLS_LOG(20, "\nid=%d is_global_agg=%d \n", p->colIdx(), p->isGlobalAgg());
+
+
     /* INDEXING LOOKUPS */
     //
     // required for index plan or scan plan if index plan not chosen.
