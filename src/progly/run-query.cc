@@ -446,7 +446,7 @@ int main(int argc, char **argv)
         if (debug) {
           std::cout << "DEBUG: run-query: project_cols=" << project_cols << std::endl;
         }
-
+        sky_qry_schema = schemaFromColNames(sky_tbl_schema, project_cols);
         if (hasAggPreds(sky_qry_preds)) {
             for (auto it = sky_qry_preds.begin();
                  it != sky_qry_preds.end(); ++it) {
@@ -464,8 +464,6 @@ int main(int argc, char **argv)
                     sky_qry_schema.push_back(ci);
                 }
             }
-        } else {
-            sky_qry_schema = schemaFromColNames(sky_tbl_schema, project_cols);
         }
     }
 
