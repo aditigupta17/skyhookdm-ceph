@@ -127,6 +127,8 @@ std::condition_variable work_cond;
 
 bool stop;
 
+flatbuffers::FlatBufferBuilder global_flatbldr(1024); 
+
 static void print_row(const char *row)
 {
   if (quiet)
@@ -649,6 +651,11 @@ void worker_exec_query_op()
 
                 if (debug)
                     cout << "DEBUG: query.cc: worker:  case SFT_FLATBUF_FLEX_ROW." << endl;
+
+                // if groupby/orderby, then declare fbbuilder globally
+                if (qop_groupby_cols != "" || qop_orderby_cols != "") {
+
+                }
 
                 flatbuffers::FlatBufferBuilder flatbldr(1024); // pre-alloc
                 int ret = processSkyFb(flatbldr,

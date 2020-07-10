@@ -458,7 +458,14 @@ int main(int argc, char **argv)
                     int agg_val_type = p->colType();
                     bool is_key = false;
                     bool nullable = false;
-                    std::string agg_name = skyOpTypeToString(p->opType());
+                    std::string agg_name;
+                    int actual_col_id = p->colIdx();
+                    for (auto col : sky_tbl_schema) {
+                        if (col.idx == actual_col_id) {
+                            agg_name = col.name;
+                            break;
+                        }
+                    }
                     const struct col_info ci(agg_idx, agg_val_type,
                                              is_key, nullable, agg_name);
                     sky_qry_schema.push_back(ci);

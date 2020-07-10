@@ -885,6 +885,8 @@ std::string skyOpTypeToString(int op);
 
 bool applyPredicates(predicate_vec& pv, sky_rec& rec);
 
+void applyAggPreds(std::vector<sky_rec>& rows, predicate_vec& agg_preds, schema_vec& query_schema, sky_root root);
+
 bool applyPredicatesArrow(predicate_vec& pv, std::shared_ptr<arrow::Table>& table,
                           int element_index);
 
@@ -911,10 +913,10 @@ template <typename T>
 T computeAgg(const T& val, const T& oldval, const int& op) {
 
     switch (op) {
-        case SOT_min: if (val < oldval) return val;
-        case SOT_max: if (val > oldval) return val;
+        case SOT_min: return (val < oldval) ? val : oldval;
+        case SOT_max: return (val > oldval) ? val : oldval;
         case SOT_sum: return oldval + val;
-        case SOT_cnt: return oldval + 1;
+        case SOT_cnt: return oldval;
         default: assert (TablesErrCodes::OpNotImplemented);
     }
     return oldval;
