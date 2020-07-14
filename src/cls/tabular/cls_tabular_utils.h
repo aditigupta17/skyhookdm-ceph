@@ -885,7 +885,7 @@ std::string skyOpTypeToString(int op);
 
 bool applyPredicates(predicate_vec& pv, sky_rec& rec);
 
-void applyAggPreds(std::vector<sky_rec>& rows, predicate_vec& agg_preds, schema_vec& query_schema, sky_root root);
+sky_rec applyAggPreds(std::vector<sky_rec>& rows, predicate_vec& agg_preds, schema_vec& query_schema, sky_root& root);
 
 bool applyPredicatesArrow(predicate_vec& pv, std::shared_ptr<arrow::Table>& table,
                           int element_index);

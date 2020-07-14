@@ -1498,940 +1498,522 @@ bool applyPredicates(predicate_vec& pv, sky_rec& rec) {
     return rowpass;
 }
 
-//sky_rec applyAggPreds(std::vector<sky_rec>& rows, predicate_vec& agg_preds) {
-void applyAggPreds(std::vector<sky_rec>& rows, predicate_vec& agg_preds, schema_vec& query_schema, sky_root root) {
-    //sky_rec output = rows[0];
-    // flexbuffers::Builder *flexbldr = new flexbuffers::Builder();
+sky_rec applyAggPreds(std::vector<sky_rec>& rows, predicate_vec& agg_preds, schema_vec& query_schema, sky_root& root) {
+    flexbuffers::Builder *flexbldr = new flexbuffers::Builder();
     auto row = rows[0].data.AsVector();
-    // flexbldr->Vector([&]() {
-    //     // iter over the query schema, locating it within the data schema
-    //     for (auto it = query_schema.begin(); it != query_schema.end(); ++it) {
-    //         col_info col = *it;
-    //         if (!(col.idx <= AGG_COL_MIN && col.idx >= AGG_COL_CNT)){
-    //             switch(col.type) { 
-    //                 case SDT_INT8:
-    //                     flexbldr->Add(row[col.idx].AsInt8());
-    //                     break;
-    //                 case SDT_INT16:
-    //                     flexbldr->Add(row[col.idx].AsInt16());
-    //                     break;
-    //                 case SDT_INT32:
-    //                     flexbldr->Add(row[col.idx].AsInt32());
-    //                     break;
-    //                 case SDT_INT64:
-    //                     flexbldr->Add(row[col.idx].AsInt64());
-    //                     break;
-    //                 case SDT_UINT8:
-    //                     flexbldr->Add(row[col.idx].AsUInt8());
-    //                     break;
-    //                 case SDT_UINT16:
-    //                     flexbldr->Add(row[col.idx].AsUInt16());
-    //                     break;
-    //                 case SDT_UINT32:
-    //                     flexbldr->Add(row[col.idx].AsUInt32());
-    //                     break;
-    //                 case SDT_UINT64:
-    //                     flexbldr->Add(row[col.idx].AsUInt64());
-    //                     break;
-    //                 case SDT_CHAR:
-    //                     flexbldr->Add(row[col.idx].AsInt8());
-    //                     break;
-    //                 case SDT_UCHAR:
-    //                     flexbldr->Add(row[col.idx].AsUInt8());
-    //                     break;
-    //                 case SDT_BOOL:
-    //                     flexbldr->Add(row[col.idx].AsBool());
-    //                     break;
-    //                 case SDT_FLOAT:
-    //                     flexbldr->Add(row[col.idx].AsFloat());
-    //                     break;
-    //                 case SDT_DOUBLE:
-    //                     flexbldr->Add(row[col.idx].AsDouble());
-    //                     break;
-    //                 case SDT_DATE:
-    //                     flexbldr->Add(row[col.idx].AsString().str());
-    //                     break;
-    //                 case SDT_STRING:
-    //                     flexbldr->Add(row[col.idx].AsString().str());
-    //                     break;
-    //             }
-    //         } else {
-    //             auto rec = rows[0].data.AsVector(); 
-    //             for (auto p : agg_preds) {
-    //                 int col = p->colIdx();
-    //                 cout << "col = " << col << "\n";
-    //                 switch (p->opType()) {
-    //                     case SOT_min: {
-    //                         switch (p->colType()) {
-    //                             case SDT_INT8: {
-    //                                 int8_t agg = rec[col].AsInt8();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int8_t val = row[col].AsInt8();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_INT16: {
-    //                                 int16_t agg = rec[col].AsInt16();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int16_t val = row[col].AsInt16();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_INT32: {
-    //                                 int32_t agg = rec[col].AsInt32();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int32_t val = row[col].AsInt32();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_INT64: {
-    //                                 int64_t agg = rec[col].AsInt64();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int64_t val = row[col].AsInt64();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT8: {
-    //                                 uint8_t agg = rec[col].AsUInt8();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint8_t val = row[col].AsUInt8();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT16: {
-    //                                 uint16_t agg = rec[col].AsUInt16();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint16_t val = row[col].AsUInt16();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT32: {
-    //                                 uint32_t agg = rec[col].AsUInt32();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint32_t val = row[col].AsUInt32();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT64: {
-    //                                 uint64_t agg = rec[col].AsUInt64();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint64_t val = row[col].AsUInt64();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_FLOAT: {
-    //                                 float agg = rec[col].AsFloat();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     float val = row[col].AsFloat();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_DOUBLE: {
-    //                                 double agg = rec[col].AsDouble();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     double val = row[col].AsDouble();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_STRING: {
-    //                                 string agg = rec[col].AsString().str();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     string val = row[col].AsString().str();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             } 
-    //                             case SDT_DATE: {
-    //                                 string agg = rec[col].AsString().str();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     string val = row[col].AsString().str();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                         }
-    //                         break;
-    //                     }          
-    //                     case SOT_max: {
-    //                         switch (p->colType()) {
-    //                             case SDT_INT8: {
-    //                                 int8_t agg = rec[col].AsInt8();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int8_t val = row[col].AsInt8();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_INT16: {
-    //                                 int16_t agg = rec[col].AsInt16();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int16_t val = row[col].AsInt16();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_INT32: {
-    //                                 int32_t agg = rec[col].AsInt32();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int32_t val = row[col].AsInt32();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_INT64: {
-    //                                 int64_t agg = rec[col].AsInt64();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int64_t val = row[col].AsInt64();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT8: {
-    //                                 uint8_t agg = rec[col].AsUInt8();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint8_t val = row[col].AsUInt8();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT16: {
-    //                                 uint16_t agg = rec[col].AsUInt16();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint16_t val = row[col].AsUInt16();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT32: {
-    //                                 uint32_t agg = rec[col].AsUInt32();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint32_t val = row[col].AsUInt32();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT64: {
-    //                                 uint64_t agg = rec[col].AsUInt64();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint64_t val = row[col].AsUInt64();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_FLOAT: {
-    //                                 float agg = rec[col].AsFloat();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     float val = row[col].AsFloat();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_DOUBLE: {
-    //                                 double agg = rec[col].AsDouble();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     double val = row[col].AsDouble();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                             case SDT_STRING: {
-    //                                 string agg = rec[col].AsString().str();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     string val = row[col].AsString().str();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             } 
-    //                             case SDT_DATE: {
-    //                                 string agg = rec[col].AsString().str();
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     string val = row[col].AsString().str();
-    //                                     agg = computeAgg(val, agg, p->opType());
-    //                                 }
-    //                                 std::cout << "agg = " << agg << "\n";
-    //                                 flexbldr->Add(agg);
-    //                                 break;
-    //                             }
-    //                         }
-    //                         break;
-    //                     }
-    //                     case SOT_sum: {
-    //                         switch (p->colType()) {
-    //                             case SDT_INT8: {
-    //                                 int8_t sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int8_t val = row[col].AsInt8();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                             case SDT_INT16: {
-    //                                 int16_t sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int16_t val = row[col].AsInt16();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                             case SDT_INT32: {
-    //                                 int32_t sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int val = row[col].AsInt32();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                             case SDT_INT64: {
-    //                                 int64_t sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     int64_t val = row[col].AsInt64();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT8: {
-    //                                 uint8_t sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint8_t val = row[col].AsUInt8();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT16: {
-    //                                 uint16_t sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint16_t val = row[col].AsUInt16();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT32: {
-    //                                 uint32_t sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint32_t val = row[col].AsUInt32();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                             case SDT_UINT64: {
-    //                                 uint64_t sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     uint64_t val = row[col].AsUInt64();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                             case SDT_FLOAT: {
-    //                                 float sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     float val = row[col].AsFloat();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                             case SDT_DOUBLE: {
-    //                                 double sum = 0;
-    //                                 for (auto r : rows) {
-    //                                     auto row = r.data.AsVector();
-    //                                     double val = row[col].AsDouble();
-    //                                     sum = computeAgg(val, sum, p->opType());
-    //                                 }
-    //                                 std::cout << "sum = " << sum << "\n";
-    //                                 flexbldr->Add(sum);
-    //                                 break;
-    //                             }
-    //                         }
-    //                         break;
-    //                     }
-    //                     case SOT_cnt: {
-    //                         int count = (int) rows.size();
-    //                         cout << "count = " << count << "\n";
-    //                         flexbldr->Add(count);
-    //                         break;
-    //                     }
-    //                     // default: assert (TablesErrCodes::PredicateComparisonNotDefined==0);
-    //                 }
-    //                 // Make one flexbuffer
-    //             }
-    //         }
-    //     }
-    // });
-
-    auto rec = rows[0].data.AsVector(); 
-    for (auto p : agg_preds) {
-        int col = p->colIdx();
-        switch (p->opType()) {
-            case SOT_min: {
-                switch (p->colType()) {
-                    case SDT_INT8: {
-                        int8_t agg = rec[col].AsInt8();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int8_t val = row[col].AsInt8();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+    flexbldr->Vector([&]() {
+        for (auto it = query_schema.begin(); it != query_schema.end(); ++it) {
+            col_info col = *it;
+            if (!(col.idx <= AGG_COL_MIN && col.idx >= AGG_COL_CNT)){
+                switch(col.type) { 
+                    case SDT_INT8:
+                        flexbldr->Add(row[col.idx].AsInt8());
                         break;
-                    }
-                    case SDT_INT16: {
-                        int16_t agg = rec[col].AsInt16();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int16_t val = row[col].AsInt16();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_INT16:
+                        flexbldr->Add(row[col.idx].AsInt16());
                         break;
-                    }
-                    case SDT_INT32: {
-                        int32_t agg = rec[col].AsInt32();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int32_t val = row[col].AsInt32();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_INT32:
+                        flexbldr->Add(row[col.idx].AsInt32());
                         break;
-                    }
-                    case SDT_INT64: {
-                        int64_t agg = rec[col].AsInt64();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int64_t val = row[col].AsInt64();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_INT64:
+                        flexbldr->Add(row[col.idx].AsInt64());
                         break;
-                    }
-                    case SDT_UINT8: {
-                        uint8_t agg = rec[col].AsUInt8();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint8_t val = row[col].AsUInt8();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_UINT8:
+                        flexbldr->Add(row[col.idx].AsUInt8());
                         break;
-                    }
-                    case SDT_UINT16: {
-                        uint16_t agg = rec[col].AsUInt16();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint16_t val = row[col].AsUInt16();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_UINT16:
+                        flexbldr->Add(row[col.idx].AsUInt16());
                         break;
-                    }
-                    case SDT_UINT32: {
-                        uint32_t agg = rec[col].AsUInt32();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint32_t val = row[col].AsUInt32();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_UINT32:
+                        flexbldr->Add(row[col.idx].AsUInt32());
                         break;
-                    }
-                    case SDT_UINT64: {
-                        uint64_t agg = rec[col].AsUInt64();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint64_t val = row[col].AsUInt64();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_UINT64:
+                        flexbldr->Add(row[col.idx].AsUInt64());
                         break;
-                    }
-                    case SDT_FLOAT: {
-                        float agg = rec[col].AsFloat();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            float val = row[col].AsFloat();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_CHAR:
+                        flexbldr->Add(row[col.idx].AsInt8());
                         break;
-                    }
-                    case SDT_DOUBLE: {
-                        double agg = rec[col].AsDouble();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            double val = row[col].AsDouble();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_UCHAR:
+                        flexbldr->Add(row[col.idx].AsUInt8());
                         break;
-                    }
-                    case SDT_STRING: {
-                        string agg = rec[col].AsString().str();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            string val = row[col].AsString().str();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_BOOL:
+                        flexbldr->Add(row[col.idx].AsBool());
                         break;
-                    } 
-                    case SDT_DATE: {
-                        string agg = rec[col].AsString().str();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            string val = row[col].AsString().str();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
+                    case SDT_FLOAT:
+                        flexbldr->Add(row[col.idx].AsFloat());
                         break;
+                    case SDT_DOUBLE:
+                        flexbldr->Add(row[col.idx].AsDouble());
+                        break;
+                    case SDT_DATE:
+                        flexbldr->Add(row[col.idx].AsString().str());
+                        break;
+                    case SDT_STRING:
+                        flexbldr->Add(row[col.idx].AsString().str());
+                        break;
+                }
+            } else {
+                // aggregating starts here
+                auto rec = rows[0].data.AsVector(); 
+                for (auto p : agg_preds) {
+                    int col = p->colIdx();
+                    switch (p->opType()) {
+                        case SOT_min: {
+                            switch (p->colType()) {
+                                case SDT_INT8: {
+                                    int8_t agg = rec[col].AsInt8();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int8_t val = row[col].AsInt8();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_INT16: {
+                                    int16_t agg = rec[col].AsInt16();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int16_t val = row[col].AsInt16();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_INT32: {
+                                    int32_t agg = rec[col].AsInt32();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int32_t val = row[col].AsInt32();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_INT64: {
+                                    int64_t agg = rec[col].AsInt64();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int64_t val = row[col].AsInt64();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_UINT8: {
+                                    uint8_t agg = rec[col].AsUInt8();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint8_t val = row[col].AsUInt8();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_UINT16: {
+                                    uint16_t agg = rec[col].AsUInt16();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint16_t val = row[col].AsUInt16();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_UINT32: {
+                                    uint32_t agg = rec[col].AsUInt32();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint32_t val = row[col].AsUInt32();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_UINT64: {
+                                    uint64_t agg = rec[col].AsUInt64();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint64_t val = row[col].AsUInt64();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_FLOAT: {
+                                    float agg = rec[col].AsFloat();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        float val = row[col].AsFloat();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_DOUBLE: {
+                                    double agg = rec[col].AsDouble();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        double val = row[col].AsDouble();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_STRING: {
+                                    string agg = rec[col].AsString().str();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        string val = row[col].AsString().str();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                } 
+                                case SDT_DATE: {
+                                    string agg = rec[col].AsString().str();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        string val = row[col].AsString().str();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                            }
+                            break;
+                        }          
+                        case SOT_max: {
+                            switch (p->colType()) {
+                                case SDT_INT8: {
+                                    int8_t agg = rec[col].AsInt8();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int8_t val = row[col].AsInt8();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_INT16: {
+                                    int16_t agg = rec[col].AsInt16();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int16_t val = row[col].AsInt16();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_INT32: {
+                                    int32_t agg = rec[col].AsInt32();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int32_t val = row[col].AsInt32();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_INT64: {
+                                    int64_t agg = rec[col].AsInt64();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int64_t val = row[col].AsInt64();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_UINT8: {
+                                    uint8_t agg = rec[col].AsUInt8();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint8_t val = row[col].AsUInt8();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_UINT16: {
+                                    uint16_t agg = rec[col].AsUInt16();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint16_t val = row[col].AsUInt16();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_UINT32: {
+                                    uint32_t agg = rec[col].AsUInt32();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint32_t val = row[col].AsUInt32();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_UINT64: {
+                                    uint64_t agg = rec[col].AsUInt64();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint64_t val = row[col].AsUInt64();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_FLOAT: {
+                                    float agg = rec[col].AsFloat();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        float val = row[col].AsFloat();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_DOUBLE: {
+                                    double agg = rec[col].AsDouble();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        double val = row[col].AsDouble();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                                case SDT_STRING: {
+                                    string agg = rec[col].AsString().str();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        string val = row[col].AsString().str();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                } 
+                                case SDT_DATE: {
+                                    string agg = rec[col].AsString().str();
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        string val = row[col].AsString().str();
+                                        agg = computeAgg(val, agg, p->opType());
+                                    }
+                                    std::cout << "agg = " << agg << "\n";
+                                    flexbldr->Add(agg);
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        case SOT_sum: {
+                            switch (p->colType()) {
+                                case SDT_INT8: {
+                                    int8_t sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int8_t val = row[col].AsInt8();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                                case SDT_INT16: {
+                                    int16_t sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int16_t val = row[col].AsInt16();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                                case SDT_INT32: {
+                                    int32_t sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int val = row[col].AsInt32();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                                case SDT_INT64: {
+                                    int64_t sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        int64_t val = row[col].AsInt64();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                                case SDT_UINT8: {
+                                    uint8_t sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint8_t val = row[col].AsUInt8();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                                case SDT_UINT16: {
+                                    uint16_t sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint16_t val = row[col].AsUInt16();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                                case SDT_UINT32: {
+                                    uint32_t sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint32_t val = row[col].AsUInt32();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                                case SDT_UINT64: {
+                                    uint64_t sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        uint64_t val = row[col].AsUInt64();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                                case SDT_FLOAT: {
+                                    float sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        float val = row[col].AsFloat();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                                case SDT_DOUBLE: {
+                                    double sum = 0;
+                                    for (auto r : rows) {
+                                        auto row = r.data.AsVector();
+                                        double val = row[col].AsDouble();
+                                        sum = computeAgg(val, sum, p->opType());
+                                    }
+                                    std::cout << "sum = " << sum << "\n";
+                                    flexbldr->Add(sum);
+                                    break;
+                                }
+                            }
+                            break;
+                        }
+                        case SOT_cnt: {
+                            int count = (int) rows.size();
+                            cout << "count = " << count << "\n";
+                            flexbldr->Add(count);
+                            break;
+                        }
+                        // default: assert (TablesErrCodes::PredicateComparisonNotDefined==0);
                     }
                 }
-                break;
-            }          
-            case SOT_max: {
-                switch (p->colType()) {
-                    case SDT_INT8: {
-                        int8_t agg = rec[col].AsInt8();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int8_t val = row[col].AsInt8();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_INT16: {
-                        int16_t agg = rec[col].AsInt16();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int16_t val = row[col].AsInt16();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_INT32: {
-                        int32_t agg = rec[col].AsInt32();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int32_t val = row[col].AsInt32();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_INT64: {
-                        int64_t agg = rec[col].AsInt64();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int64_t val = row[col].AsInt64();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_UINT8: {
-                        uint8_t agg = rec[col].AsUInt8();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint8_t val = row[col].AsUInt8();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_UINT16: {
-                        uint16_t agg = rec[col].AsUInt16();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint16_t val = row[col].AsUInt16();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_UINT32: {
-                        uint32_t agg = rec[col].AsUInt32();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint32_t val = row[col].AsUInt32();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_UINT64: {
-                        uint64_t agg = rec[col].AsUInt64();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint64_t val = row[col].AsUInt64();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_FLOAT: {
-                        float agg = rec[col].AsFloat();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            float val = row[col].AsFloat();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_DOUBLE: {
-                        double agg = rec[col].AsDouble();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            double val = row[col].AsDouble();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                    case SDT_STRING: {
-                        string agg = rec[col].AsString().str();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            string val = row[col].AsString().str();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    } 
-                    case SDT_DATE: {
-                        string agg = rec[col].AsString().str();
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            string val = row[col].AsString().str();
-                            agg = computeAgg(val, agg, p->opType());
-                        }
-                        std::cout << "agg = " << agg << "\n";
-                        break;
-                    }
-                }
-                break;
             }
-            case SOT_sum: {
-                switch (p->colType()) {
-                    case SDT_INT8: {
-                        int8_t sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int8_t val = row[col].AsInt8();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                    case SDT_INT16: {
-                        int16_t sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int16_t val = row[col].AsInt16();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                    case SDT_INT32: {
-                        int32_t sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int val = row[col].AsInt32();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                    case SDT_INT64: {
-                        int64_t sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            int64_t val = row[col].AsInt64();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                    case SDT_UINT8: {
-                        uint8_t sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint8_t val = row[col].AsUInt8();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                    case SDT_UINT16: {
-                        uint16_t sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint16_t val = row[col].AsUInt16();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                    case SDT_UINT32: {
-                        uint32_t sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint32_t val = row[col].AsUInt32();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                    case SDT_UINT64: {
-                        uint64_t sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            uint64_t val = row[col].AsUInt64();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                    case SDT_FLOAT: {
-                        float sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            float val = row[col].AsFloat();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                    case SDT_DOUBLE: {
-                        double sum = 0;
-                        for (auto r : rows) {
-                            auto row = r.data.AsVector();
-                            double val = row[col].AsDouble();
-                            sum = computeAgg(val, sum, p->opType());
-                        }
-                        std::cout << "sum = " << sum << "\n";
-                        break;
-                    }
-                }
-                break;
-            }
-            case SOT_cnt: {
-                int count = (int) rows.size();
-                cout << "count = " << count << "\n";
-                break;
-            }
-            // default: assert (TablesErrCodes::PredicateComparisonNotDefined==0);
         }
-        // Make one flexbuffer
+    });
+
+    flatbuffers::FlatBufferBuilder flatbldr;
+    flexbldr->Finish();
+    auto row_data = flatbldr.CreateVector(flexbldr->GetBuffer());
+    delete flexbldr;
+
+    // TODO: update nullbits
+    auto nullbits = flatbldr.CreateVector(rows[0].nullbits);
+    flatbuffers::Offset<Tables::Record> row_off = \
+                Tables::CreateRecord(flatbldr, rows[0].RID, nullbits, row_data);
+    delete_vector dead_rows;
+    std::vector<flatbuffers::Offset<Tables::Record>> offs;
+    dead_rows.push_back(0);
+    offs.push_back(row_off);
+
+    std::string query_schema_str;
+    for (auto it = query_schema.begin(); it != query_schema.end(); ++it) {
+        query_schema_str.append(it->toString() + "\n");
     }
 
+    auto return_data_schema = flatbldr.CreateString(query_schema_str);
+    auto db_schema_name = flatbldr.CreateString(root.db_schema_name);
+    auto table_name = flatbldr.CreateString(root.table_name);
+    auto delete_v = flatbldr.CreateVector(dead_rows);
+    auto rows_v = flatbldr.CreateVector(offs);
 
-
-    // // EXPERIMENTATION
-    // flatbuffers::FlatBufferBuilder flatbldr;
-    // flexbldr->Finish();
-    // auto row_data = flatbldr.CreateVector(flexbldr->GetBuffer());
-    // delete flexbldr;
-    // cout << "#2339\n";
-    // // TODO: update nullbits
-    // auto nullbits = flatbldr.CreateVector(rows[0].nullbits);
-    // flatbuffers::Offset<Tables::Record> row_off = \
-    //             Tables::CreateRecord(flatbldr, rows[0].RID, nullbits, row_data);
-    // delete_vector dead_rows;
-    // std::vector<flatbuffers::Offset<Tables::Record>> offs;
-    // dead_rows.push_back(0);
-    // offs.push_back(row_off);
-    // cout << "#2348\n";
-    // std::string query_schema_str;
-    // for (auto it = query_schema.begin(); it != query_schema.end(); ++it) {
-    //     query_schema_str.append(it->toString() + "\n");
-    // }
-
-    // auto return_data_schema = flatbldr.CreateString(query_schema_str);
-    // auto db_schema_name = flatbldr.CreateString(root.db_schema_name);
-    // auto table_name = flatbldr.CreateString(root.table_name);
-    // auto delete_v = flatbldr.CreateVector(dead_rows);
-    // auto rows_v = flatbldr.CreateVector(offs);
-
-    // auto table = CreateTable(
-    //     flatbldr,
-    //     root.data_format_type,
-    //     root.skyhook_version,
-    //     root.data_structure_version,
-    //     root.data_schema_version,
-    //     return_data_schema,
-    //     db_schema_name,
-    //     table_name,
-    //     delete_v,
-    //     rows_v,
-    //     offs.size());
-    // cout << "#2372\n";
-    // // NOTE: the fb may be incomplete/empty, but must finish() else internal
-    // // fb lib assert finished() fails, hence we must always return a valid fb
-    // // and catch any ret error code upstream
-    // flatbldr.Finish(table);
-    // const char* processed_data = \
-    //                 reinterpret_cast<const char*>(flatbldr.GetBufferPointer());
-    // size_t processed_data_sz = strlen(processed_data);
-    // sky_root r = getSkyRoot(processed_data, processed_data_sz, SFT_FLATBUF_FLEX_ROW);
-    // sky_rec skyrec = getSkyRec(static_cast<row_offs>(r.data_vec)->Get(0));
-    // cout << "#2380\n";
-    // return skyrec;
-
-
-
-    //flatbuffers::FlatBufferBuilder builder;
-    //auto temp = builder.CreateVector(row_off, 1);
-    //flatbuffers::Vector<flatbuffers::Offset<Tables::Record> > temp = row_off;
-
-    // flexbuffers::Builder *flex = new flexbuffers::Builder();
-    // flex->Vector([&]() {
-    //     flex->Add(row_off);
-    // });
-    // flex->Finish();
-
-    // const flatbuffers::Vector<flatbuffers::Offset<Tables::Record> >* foo = &flex;
+    auto table = CreateTable(
+        flatbldr,
+        root.data_format_type,
+        root.skyhook_version,
+        root.data_structure_version,
+        root.data_schema_version,
+        return_data_schema,
+        db_schema_name,
+        table_name,
+        delete_v,
+        rows_v,
+        offs.size());
+    // NOTE: the fb may be incomplete/empty, but must finish() else internal
+    // fb lib assert finished() fails, hence we must always return a valid fb
+    // and catch any ret error code upstream
+    flatbldr.Finish(table);
+    const char* processed_data = \
+                    reinterpret_cast<const char*>(flatbldr.GetBufferPointer());
+    // size_t processed_data_sz = processed_data.GetSize();
+    // error: request for member ‘GetSize’ in ‘processed_data’, which is of non-class type ‘const char*’
+    size_t processed_data_sz = strlen(processed_data);
+    sky_root r = getSkyRoot(processed_data, processed_data_sz, SFT_FLATBUF_FLEX_ROW);
     
-    // std::vector<flatbuffers::Offset<Tables::Record>> offs;
-    // offs.push_back(row_off);
+    // 1. try printing orig root : WORKS
+    // 2. try printing r attributes : Can't do, const void *data_vec 
+    // pointer points to void, cannot be dereferenced because compiler does not know the type of value 'hidden' behind it
 
-
-    // Tables::sky_rec rec = Tables::getSkyRec(foo->Get(0));
-    // Tables::sky_rec rec = Tables::getSkyRec(static_cast<Tables::row_offs>(offs)->Get(0));
-    //sky_rec skyrec = getSkyRec(row_off);
-    
-    // flatbuffers::Offset<Tables::Record> row_off = \
-                Tables::CreateRecord(*flatbldr, rec.RID, nullbits, row_data);
-    // vector<flatbuffers::Offset<Tables::Record> row_off> foo;
-    // sky_rec skyrec = getSkyRec(const Tables::Record* rec);
-    // sky_rec skyrec = getSkyRec(static_cast<row_offs>()->Get(i));
-    // return skyrec
-
-
-    //ceph::bufferlist::iterator data_itr = b.begin();
-    // while (data_itr.get_remaining() > 0) {
-    //     bufferlist data;
-    //     try {
-    //         ::decode(data, data_itr);
-    //     } catch (const buffer::error &err) {
-    //         CLS_ERR("ERROR: cls: exec_query_op: decoding data from data_itr (ds sequence");
-    //         return -EINVAL;
-    //     }
-    //     sky_meta fbmeta = getSkyMeta(&data);
-    // }
-    // dataptr = fbmeta.blob_data;
-    // datasz = fbmeta.blob_size;
-    // sky_root root = getSkyRoot(dataptr, datasz, SFT_FLATBUF_FLEX_ROW);
-    // sky_rec rec = getSkyRec(static_cast<row_offs>(root.data_vec)->Get(0));
-    // return rec;
+    sky_rec record = getSkyRec(static_cast<Tables::row_offs>(r.data_vec)->Get(0));
+    return record;
 }
 
 // used by processArrow methods only
