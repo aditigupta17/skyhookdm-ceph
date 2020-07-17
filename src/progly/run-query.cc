@@ -430,6 +430,44 @@ int main(int argc, char **argv)
           cout << orderby_cols << std::endl;
     }
 
+    // validate incoming query
+    if (groupby_cols != "" || hasAggPreds(sky_qry_preds)) {
+        schema_vec projection = schemaFromColNames(sky_tbl_schema, project_cols);
+        bool is_valid_query = true;
+        for (auto col : projection) {
+          bool is_present_in_groupby = false;
+          bool is_present_in_agg = false;
+          // check groupby
+          schema_vec groupby_columns = schemaFromColNames(sky_tbl_schema, groupby_cols);
+          for (auto it : groupby_columns) {
+            if (it.compareName(col.name)) {
+              is_present_in_groupby = true;
+              break;
+            }
+          }
+          // check aggs
+          for (auto it = sky_qry_preds.begin(); it != sky_qry_preds.end(); ++it) {
+            PredicateBase* p = *it;
+            if (p->isGlobalAgg()) {
+              int actual_col_id = p->colIdx();
+              for (auto c : sky_tbl_schema) {
+                if (c.idx == actual_col_id && c.name == col.name) {
+                  is_present_in_agg = true;
+                  break;
+                }
+              }
+            }
+          } 
+          is_valid_query = is_present_in_groupby || is_present_in_agg;
+          if (!is_valid_query) break;
+        }
+        if (!is_valid_query) {
+          std::cerr << "Invalid query: projected column should be present "
+                    << "either in aggregated function or GROUP BY argument" << std::endl;
+          exit(1);
+        }
+    }
+
     if (project_cols == PROJECT_DEFAULT) {
         for(auto it=sky_tbl_schema.begin(); it!=sky_tbl_schema.end(); ++it) {
             col_info ci(*it);  // deep copy
@@ -446,32 +484,84 @@ int main(int argc, char **argv)
         if (debug) {
           std::cout << "DEBUG: run-query: project_cols=" << project_cols << std::endl;
         }
-        sky_qry_schema = schemaFromColNames(sky_tbl_schema, project_cols);
-        if (hasAggPreds(sky_qry_preds)) {
-            for (auto it = sky_qry_preds.begin();
-                 it != sky_qry_preds.end(); ++it) {
-                PredicateBase* p = *it;
-                if (p->isGlobalAgg()) {
-                    // build col info for agg pred type, append to query schema
-                    std::string op_str = skyOpTypeToString(p->opType());
-                    int agg_idx = AGG_COL_IDX.at(op_str);
-                    int agg_val_type = p->colType();
-                    bool is_key = false;
-                    bool nullable = false;
-                    std::string agg_name;
-                    int actual_col_id = p->colIdx();
-                    for (auto col : sky_tbl_schema) {
-                        if (col.idx == actual_col_id) {
-                            agg_name = col.name;
-                            break;
-                        }
-                    }
-                    const struct col_info ci(agg_idx, agg_val_type,
-                                             is_key, nullable, agg_name);
-                    sky_qry_schema.push_back(ci);
+        // Tables::schema_vec schema = schemaFromColNames(sky_tbl_schema, project_cols);
+        // push final columns in sky_qry_schema
+        // step-1: remove all agg'ed columns
+        // step-2: add all agg'ed columns
+        Tables::predicate_vec non_agg_preds;
+        Tables::predicate_vec agg_preds;
+        for (auto p : sky_qry_preds) {
+          if (p->isGlobalAgg()) agg_preds.push_back(p);
+          else non_agg_preds.push_back(p);
+        }
+        if (agg_preds.empty()) {
+          sky_qry_schema = schemaFromColNames(sky_tbl_schema, project_cols);
+        } else {
+          Tables::schema_vec schema = schemaFromColNames(sky_tbl_schema, project_cols);
+          for (auto c : schema) {
+            // if not being agged over, then push
+            bool is_in_agg = false;
+            for (auto pred : agg_preds) {
+              int col_id = pred->colIdx();
+              for (auto col : sky_tbl_schema) {
+                if (col.idx == col_id && c.idx == col_id) {
+                    is_in_agg = true;
+                    break;
+                }
+              }
+            }
+            if (!is_in_agg) sky_qry_schema.push_back(c);
+          }
+          // push all agg'ed columns
+          for (auto p : agg_preds) {
+            std::string op_str = skyOpTypeToString(p->opType());
+            int agg_idx = AGG_COL_IDX.at(op_str);
+            int agg_val_type = p->colType();
+            bool is_key = false;
+            bool nullable = false;
+            std::string agg_name;
+            int actual_col_id = p->colIdx();
+            for (auto col : sky_tbl_schema) {
+                if (col.idx == actual_col_id) {
+                    agg_name = col.name;
+                    break;
                 }
             }
+            const struct col_info ci(agg_idx, agg_val_type,
+                                      is_key, nullable, agg_name);
+            sky_qry_schema.push_back(ci);
+          }
         }
+
+
+        // if (hasAggPreds(sky_qry_preds)) {
+        //     for (auto it = sky_qry_preds.begin();
+        //          it != sky_qry_preds.end(); ++it) {
+        //         PredicateBase* p = *it;
+        //         if (p->isGlobalAgg()) {
+        //             // build col info for agg pred type, append to query schema
+        //             std::string op_str = skyOpTypeToString(p->opType());
+        //             int agg_idx = AGG_COL_IDX.at(op_str);
+        //             int agg_val_type = p->colType();
+        //             bool is_key = false;
+        //             bool nullable = false;
+        //             std::string agg_name;
+        //             int actual_col_id = p->colIdx();
+        //             // if a column is being agg'ed over and is present in schema, don't push
+        //             for (auto col : sky_tbl_schema) {
+        //                 if (col.idx == actual_col_id) {
+        //                     agg_name = col.name;
+        //                     break;
+        //                 }
+        //             }
+        //             const struct col_info ci(agg_idx, agg_val_type,
+        //                                      is_key, nullable, agg_name);
+        //             sky_qry_schema.push_back(ci);
+        //         }
+        //     }
+        // } else {
+        //   sky_qry_schema = schemaFromColNames(sky_tbl_schema, project_cols);
+        // }
     }
 
     // set the index type
