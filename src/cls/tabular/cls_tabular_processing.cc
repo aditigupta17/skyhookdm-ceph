@@ -245,28 +245,7 @@ int processSkyFb(
             vector<sky_rec> foo = (*(groupby_map.begin())).second;
             vector<sky_rec> foo2 = (*(++(groupby_map.begin()))).second;
             sky_rec bar = applyAggPreds(foo, agg_preds, query_schema, root);
-            cout << "\n===============\nPrinting rec after calling fn: \n";
-            auto d = bar.data.AsVector();
-            for (int i = 0; i < (int)d.size(); ++i) {
-                cout << "Element " << i << ": " << d[i].ToString() << "\n";
-            }
-            cout << "===============\n\n\n";
-
             sky_rec bar2 = applyAggPreds(foo2, agg_preds, query_schema, root);
-
-            cout << "\n===============\nPrinting rec after calling fn: \n";
-            auto e = bar.data.AsVector();
-            for (int i = 0; i < (int)e.size(); ++i) {
-                cout << "Element " << i << ": " << e[i].ToString() << "\n";
-            }
-            cout << "===============\n\n\n";
-
-            cout << "\n===============\nPrinting rec after calling fn: \n";
-            auto f = bar2.data.AsVector();
-            for (int i = 0; i < (int)f.size(); ++i) {
-                cout << "Element " << i << ": " << f[i].ToString() << "\n";
-            }
-            cout << "===============\n\n\n";
 
             for(auto p : groupby_map) {
                 std::vector<sky_rec> rows = p.second;
