@@ -484,22 +484,29 @@ int main(int argc, char **argv)
         if (debug) {
           std::cout << "DEBUG: run-query: project_cols=" << project_cols << std::endl;
         }
-        // Tables::schema_vec schema = schemaFromColNames(sky_tbl_schema, project_cols);
+
         // push final columns in sky_qry_schema
-        // step-1: remove all agg'ed columns
-        // step-2: add all agg'ed columns
         Tables::predicate_vec non_agg_preds;
         Tables::predicate_vec agg_preds;
+
+        // segregating agg and non-agg preds
         for (auto p : sky_qry_preds) {
           if (p->isGlobalAgg()) agg_preds.push_back(p);
           else non_agg_preds.push_back(p);
         }
+
+        // if aggs not present: schema stays as it is
         if (agg_preds.empty()) {
           sky_qry_schema = schemaFromColNames(sky_tbl_schema, project_cols);
         } else {
+
+          // step-1.1: get original schema for all project cols and then build final schema step by step
+          sky_qry_schema.clear();
           Tables::schema_vec schema = schemaFromColNames(sky_tbl_schema, project_cols);
+
+          // step-1.2: remove all agg'ed columns
           for (auto c : schema) {
-            // if not being agged over, then push
+            // discard if included in agg preds
             bool is_in_agg = false;
             for (auto pred : agg_preds) {
               int col_id = pred->colIdx();
@@ -512,7 +519,8 @@ int main(int argc, char **argv)
             }
             if (!is_in_agg) sky_qry_schema.push_back(c);
           }
-          // push all agg'ed columns
+
+          // step-2: add all aggregated columns
           for (auto p : agg_preds) {
             std::string op_str = skyOpTypeToString(p->opType());
             int agg_idx = AGG_COL_IDX.at(op_str);
