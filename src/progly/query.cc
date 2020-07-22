@@ -87,7 +87,7 @@ std::string qop_file_name;
 std::string qop_tree_name;
 
 // other exec flags
-bool runstats;
+string runstats;
 std::string project_cols;
 
 // prints full record header and metadata
