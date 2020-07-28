@@ -1963,89 +1963,6 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
     Tables::col_info column = sv[0];
     std::string min = args[1];
     std::string max = args[2]; 
-    switch (column.type) {
-      case Tables::SkyDataType::SDT_INT8: {
-        Tables::StatsArgument<int8_t>* s = \
-              new Tables::StatsArgument<int8_t> \
-              (col, static_cast<int8_t>(std::stol(min)), static_cast<int8_t>(std::stol(max)),
-                number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
-        break;
-      }
-      case Tables::SkyDataType::SDT_INT16: {
-        Tables::StatsArgument<int16_t>* s = \
-              new Tables::StatsArgument<int16_t> \
-              (col, static_cast<int16_t>(std::stol(min)), static_cast<int16_t>(std::stol(max)),
-                number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
-        break;
-      }
-      case Tables::SkyDataType::SDT_INT32: {
-        Tables::StatsArgument<int32_t>* s = \
-            new Tables::StatsArgument<int32_t> \
-            (col, static_cast<int32_t>(std::stol(min)), static_cast<int32_t>(std::stol(max)),
-              number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
-        break;
-      }
-      case Tables::SkyDataType::SDT_INT64: {
-        Tables::StatsArgument<int64_t>* s = \
-              new Tables::StatsArgument<int64_t> \
-              (col, static_cast<int64_t>(std::stol(min)), static_cast<int64_t>(std::stol(max)),
-                number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str()); 
-        break;
-      }
-      case Tables::SkyDataType::SDT_UINT8: {
-        Tables::StatsArgument<uint8_t>* s = \
-              new Tables::StatsArgument<uint8_t> \
-              (col, static_cast<uint8_t>(std::stol(min)), static_cast<uint8_t>(std::stol(max)),
-                number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str()); 
-        break;
-      }
-      case Tables::SkyDataType::SDT_UINT16: {
-        Tables::StatsArgument<uint16_t>* s = \
-              new Tables::StatsArgument<uint16_t> \
-              (col, static_cast<uint16_t>(std::stol(min)), static_cast<uint16_t>(std::stol(max)),
-                number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
-        break;
-      }
-      case Tables::SkyDataType::SDT_UINT32: {
-        Tables::StatsArgument<uint32_t>* s = \
-              new Tables::StatsArgument<uint32_t> \
-              (col, static_cast<uint32_t>(std::stol(min)), static_cast<uint32_t>(std::stol(max)),
-                number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());  
-        break;
-      }
-      case Tables::SkyDataType::SDT_UINT64: {
-        Tables::StatsArgument<uint64_t>* s = \
-              new Tables::StatsArgument<uint64_t> \
-              (col, static_cast<uint64_t>(std::stol(min)), static_cast<uint64_t>(std::stol(max)),
-                number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());  
-        break;
-      }
-      case Tables::SkyDataType::SDT_FLOAT: {
-        Tables::StatsArgument<float>* s = \
-              new Tables::StatsArgument<float> \
-              (col, static_cast<float>(std::stol(min)), static_cast<float>(std::stol(max)),
-                number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
-        break;
-      }
-      case Tables::SkyDataType::SDT_DOUBLE: {
-        Tables::StatsArgument<double>* s = \
-              new Tables::StatsArgument<double> \
-              (col, static_cast<double>(std::stol(min)), static_cast<double>(std::stol(max)),
-                number_of_buckets, sampling);
-        CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
-        break;  
-      }
-      default: CLS_ERR("ERROR: cls_tabular:exec_runstats_op: invalid column data type, cannot perform runstats");
-    }
     
     std::map<int, struct read_info> reads;
     bool read_full_object = true;
@@ -2095,10 +2012,135 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
             CLS_LOG(20, "cls: exec_runstats_op: fbmeta.blob_deleted=%d", fbmeta.blob_deleted);
             CLS_LOG(20, "cls: exec_runstats_op: fbmeta.blob_orig_off=%lu", fbmeta.blob_orig_off);
             CLS_LOG(20, "cls: exec_runstats_op: fbmeta.blob_orig_len=%lu", fbmeta.blob_orig_len);
-            CLS_LOG(20, "cls: exec_runstats_op: fbmeta.blob_compression=%d", fbmeta.blob_compression);   
+            CLS_LOG(20, "cls: exec_runstats_op: fbmeta.blob_compression=%d", fbmeta.blob_compression); 
+
+            // debug/accounting
+            std::string errmsg;
+
+            // CREATE An FB_META, start with an empty builder first
+            flatbuffers::FlatBufferBuilder *fbmeta_builder =  \
+                new flatbuffers::FlatBufferBuilder();
+
+            switch (fbmeta.blob_format) {
+                case SFT_FLATBUF_FLEX_ROW: {
+                    CLS_LOG(20, "cls: exec_runstats_op: case SFT_FLATBUF_FLEX_ROW");
+                    int bldr_size = 1024;
+                    flatbuffers::FlatBufferBuilder result_builder(bldr_size);
+                    switch (column.type) {
+                        case Tables::SkyDataType::SDT_INT8: {
+                            Tables::StatsArgument<int8_t>* s = \
+                                new Tables::StatsArgument<int8_t> \
+                                (col, static_cast<int8_t>(std::stol(min)), static_cast<int8_t>(std::stol(max)),
+                                    number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            break;
+                        }
+                        case Tables::SkyDataType::SDT_INT16: {
+                            Tables::StatsArgument<int16_t>* s = \
+                                new Tables::StatsArgument<int16_t> \
+                                (col, static_cast<int16_t>(std::stol(min)), static_cast<int16_t>(std::stol(max)),
+                                    number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            break;
+                        }
+                        case Tables::SkyDataType::SDT_INT32: {
+                            Tables::StatsArgument<int32_t>* s = \
+                                new Tables::StatsArgument<int32_t> \
+                                (col, static_cast<int32_t>(std::stol(min)), static_cast<int32_t>(std::stol(max)),
+                                number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            break;
+                        }
+                        case Tables::SkyDataType::SDT_INT64: {
+                            Tables::StatsArgument<int64_t>* s = \
+                                new Tables::StatsArgument<int64_t> \
+                                (col, static_cast<int64_t>(std::stol(min)), static_cast<int64_t>(std::stol(max)),
+                                    number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str()); 
+                            break;
+                        }
+                        case Tables::SkyDataType::SDT_UINT8: {
+                            Tables::StatsArgument<uint8_t>* s = \
+                                new Tables::StatsArgument<uint8_t> \
+                                (col, static_cast<uint8_t>(std::stol(min)), static_cast<uint8_t>(std::stol(max)),
+                                    number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str()); 
+                            break;
+                        }
+                        case Tables::SkyDataType::SDT_UINT16: {
+                            Tables::StatsArgument<uint16_t>* s = \
+                                new Tables::StatsArgument<uint16_t> \
+                                (col, static_cast<uint16_t>(std::stol(min)), static_cast<uint16_t>(std::stol(max)),
+                                    number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            break;
+                        }
+                        case Tables::SkyDataType::SDT_UINT32: {
+                            Tables::StatsArgument<uint32_t>* s = \
+                                new Tables::StatsArgument<uint32_t> \
+                                (col, static_cast<uint32_t>(std::stol(min)), static_cast<uint32_t>(std::stol(max)),
+                                    number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());  
+                            break;
+                        }
+                        case Tables::SkyDataType::SDT_UINT64: {
+                            Tables::StatsArgument<uint64_t>* s = \
+                                new Tables::StatsArgument<uint64_t> \
+                                (col, static_cast<uint64_t>(std::stol(min)), static_cast<uint64_t>(std::stol(max)),
+                                    number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());  
+                            break;
+                        }
+                        case Tables::SkyDataType::SDT_FLOAT: {
+                            Tables::StatsArgument<float>* s = \
+                                new Tables::StatsArgument<float> \
+                                (col, static_cast<float>(std::stol(min)), static_cast<float>(std::stol(max)),
+                                    number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            break;
+                        }
+                        case Tables::SkyDataType::SDT_DOUBLE: {
+                            Tables::StatsArgument<double>* s = \
+                                new Tables::StatsArgument<double> \
+                                (col, static_cast<double>(std::stol(min)), static_cast<double>(std::stol(max)),
+                                    number_of_buckets, sampling);
+                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            break;  
+                        }
+                        default: CLS_ERR("ERROR: cls_tabular:exec_runstats_op: invalid column data type, cannot perform runstats");
+                    }
+
+                    // int bldr_size = 1024;
+                    // flatbuffers::FlatBufferBuilder result_builder(bldr_size);
+                    // ret = processSkyFb(result_builder,
+                    //                 data_schema,
+                    //                 query_schema,
+                    //                 query_preds,
+                    //                 fbmeta.blob_data,
+                    //                 fbmeta.blob_size,
+                    //                 errmsg,
+                    //                 row_nums);
+
+
+                    // if (ret != 0) {
+                    //     CLS_ERR("ERROR: processSkyFb %s", errmsg.c_str());
+                    //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                    //     return -1;
+                    // }
+                    break;
+                }
+                case SFT_JSON:
+                case SFT_ARROW: 
+                case SFT_FLATBUF_CSV_ROW:
+                case SFT_PG_TUPLE:
+                case SFT_CSV:
+                default:
+                    CLS_LOG(20, "cls: exec_runstats_op: case SkyFormatTypeNotRecognized");
+                    assert (SkyFormatTypeNotRecognized==0);
+                    break;
+            } // end switch  
         } 
     }  
-    
     return 0;
 }
 
