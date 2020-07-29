@@ -464,6 +464,7 @@ void worker_exec_runstats_op(librados::IoCtx *ioctx, stats_op op)
     ::encode(op, inbl);
     int ret = ioctx->exec(oid, "tabular", "exec_runstats_op", inbl, outbl);
     checkret(ret, 0);
+    // print_data(outbl);
   }
   ioctx->close();
 }

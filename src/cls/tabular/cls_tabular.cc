@@ -1923,6 +1923,8 @@ int test_query_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
 static
 int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
 {
+    // return bufferlist
+    bufferlist result_bl;
     // unpack the requested op from the inbl.
     stats_op op;
     try {
@@ -2032,7 +2034,20 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<int8_t> \
                                 (col, static_cast<int8_t>(std::stol(min)), static_cast<int8_t>(std::stol(max)),
                                     number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // ret = processStatsFb(result_builder,
+                            //                 table_schema,
+                            //                 s,
+                            //                 fbmeta.blob_data,
+                            //                 fbmeta.blob_size,
+                            //                 errmsg,
+                            //                 row_nums);
+                            // CLS_LOG(20, "returned value=%d", ret);
+                            // if (ret != 0) {
+                            //     CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                            //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                            //     return -1;
+                            // }
                             break;
                         }
                         case Tables::SkyDataType::SDT_INT16: {
@@ -2040,7 +2055,20 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<int16_t> \
                                 (col, static_cast<int16_t>(std::stol(min)), static_cast<int16_t>(std::stol(max)),
                                     number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // ret = processStatsFb(result_builder,
+                            //                 table_schema,
+                            //                 s,
+                            //                 fbmeta.blob_data,
+                            //                 fbmeta.blob_size,
+                            //                 errmsg,
+                            //                 row_nums);
+                            // CLS_LOG(20, "returned value=%d", ret);
+                            // if (ret != 0) {
+                            //     CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                            //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                            //     return -1;
+                            // }
                             break;
                         }
                         case Tables::SkyDataType::SDT_INT32: {
@@ -2048,7 +2076,25 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<int32_t> \
                                 (col, static_cast<int32_t>(std::stol(min)), static_cast<int32_t>(std::stol(max)),
                                 number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            ret = processStatsFb(result_builder,
+                                            table_schema,
+                                            s,
+                                            fbmeta.blob_data,
+                                            fbmeta.blob_size,
+                                            errmsg,
+                                            row_nums);
+                            CLS_LOG(20, "returned value=%d", ret);
+                            if (ret != 0) {
+                                CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                                CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                                return -1;
+                            }
+                            createFbMeta(fbmeta_builder,
+                                        SFT_FLATBUF_FLEX_ROW,
+                                        reinterpret_cast<unsigned char*>(result_builder.GetBufferPointer()),
+                                        result_builder.GetSize()
+                            );
                             break;
                         }
                         case Tables::SkyDataType::SDT_INT64: {
@@ -2056,7 +2102,20 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<int64_t> \
                                 (col, static_cast<int64_t>(std::stol(min)), static_cast<int64_t>(std::stol(max)),
                                     number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str()); 
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str()); 
+                            // ret = processStatsFb(result_builder,
+                            //                 table_schema,
+                            //                 s,
+                            //                 fbmeta.blob_data,
+                            //                 fbmeta.blob_size,
+                            //                 errmsg,
+                            //                 row_nums);
+                            // CLS_LOG(20, "returned value=%d", ret);
+                            // if (ret != 0) {
+                            //     CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                            //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                            //     return -1;
+                            // }
                             break;
                         }
                         case Tables::SkyDataType::SDT_UINT8: {
@@ -2064,7 +2123,20 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<uint8_t> \
                                 (col, static_cast<uint8_t>(std::stol(min)), static_cast<uint8_t>(std::stol(max)),
                                     number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str()); 
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str()); 
+                            // ret = processStatsFb(result_builder,
+                            //                 table_schema,
+                            //                 s,
+                            //                 fbmeta.blob_data,
+                            //                 fbmeta.blob_size,
+                            //                 errmsg,
+                            //                 row_nums);
+                            // CLS_LOG(20, "returned value=%d", ret);
+                            // if (ret != 0) {
+                            //     CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                            //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                            //     return -1;
+                            // }
                             break;
                         }
                         case Tables::SkyDataType::SDT_UINT16: {
@@ -2072,7 +2144,20 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<uint16_t> \
                                 (col, static_cast<uint16_t>(std::stol(min)), static_cast<uint16_t>(std::stol(max)),
                                     number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // ret = processStatsFb(result_builder,
+                            //                 table_schema,
+                            //                 s,
+                            //                 fbmeta.blob_data,
+                            //                 fbmeta.blob_size,
+                            //                 errmsg,
+                            //                 row_nums);
+                            // CLS_LOG(20, "returned value=%d", ret);
+                            // if (ret != 0) {
+                            //     CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                            //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                            //     return -1;
+                            // }
                             break;
                         }
                         case Tables::SkyDataType::SDT_UINT32: {
@@ -2080,7 +2165,20 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<uint32_t> \
                                 (col, static_cast<uint32_t>(std::stol(min)), static_cast<uint32_t>(std::stol(max)),
                                     number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());  
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());  
+                            // ret = processStatsFb(result_builder,
+                            //                 table_schema,
+                            //                 s,
+                            //                 fbmeta.blob_data,
+                            //                 fbmeta.blob_size,
+                            //                 errmsg,
+                            //                 row_nums);
+                            // CLS_LOG(20, "returned value=%d", ret);
+                            // if (ret != 0) {
+                            //     CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                            //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                            //     return -1;
+                            // }
                             break;
                         }
                         case Tables::SkyDataType::SDT_UINT64: {
@@ -2088,7 +2186,20 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<uint64_t> \
                                 (col, static_cast<uint64_t>(std::stol(min)), static_cast<uint64_t>(std::stol(max)),
                                     number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());  
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());  
+                            // ret = processStatsFb(result_builder,
+                            //                 table_schema,
+                            //                 s,
+                            //                 fbmeta.blob_data,
+                            //                 fbmeta.blob_size,
+                            //                 errmsg,
+                            //                 row_nums);
+                            // CLS_LOG(20, "returned value=%d", ret);
+                            // if (ret != 0) {
+                            //     CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                            //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                            //     return -1;
+                            // }
                             break;
                         }
                         case Tables::SkyDataType::SDT_FLOAT: {
@@ -2096,7 +2207,20 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<float> \
                                 (col, static_cast<float>(std::stol(min)), static_cast<float>(std::stol(max)),
                                     number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // ret = processStatsFb(result_builder,
+                            //                 table_schema,
+                            //                 s,
+                            //                 fbmeta.blob_data,
+                            //                 fbmeta.blob_size,
+                            //                 errmsg,
+                            //                 row_nums);
+                            // CLS_LOG(20, "returned value=%d", ret);
+                            // if (ret != 0) {
+                            //     CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                            //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                            //     return -1;
+                            // }
                             break;
                         }
                         case Tables::SkyDataType::SDT_DOUBLE: {
@@ -2104,29 +2228,24 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                 new Tables::StatsArgument<double> \
                                 (col, static_cast<double>(std::stol(min)), static_cast<double>(std::stol(max)),
                                     number_of_buckets, sampling);
-                            CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // CLS_LOG(20, "exec_runstats_op: stats_argument=%s", s->toString().c_str());
+                            // ret = processStatsFb(result_builder,
+                            //                 table_schema,
+                            //                 s,
+                            //                 fbmeta.blob_data,
+                            //                 fbmeta.blob_size,
+                            //                 errmsg,
+                            //                 row_nums);
+                            // CLS_LOG(20, "returned value=%d", ret);
+                            // if (ret != 0) {
+                            //     CLS_ERR("ERROR: processStats %s", errmsg.c_str());
+                            //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
+                            //     return -1;
+                            // }
                             break;  
                         }
                         default: CLS_ERR("ERROR: cls_tabular:exec_runstats_op: invalid column data type, cannot perform runstats");
                     }
-
-                    // int bldr_size = 1024;
-                    // flatbuffers::FlatBufferBuilder result_builder(bldr_size);
-                    // ret = processSkyFb(result_builder,
-                    //                 data_schema,
-                    //                 query_schema,
-                    //                 query_preds,
-                    //                 fbmeta.blob_data,
-                    //                 fbmeta.blob_size,
-                    //                 errmsg,
-                    //                 row_nums);
-
-
-                    // if (ret != 0) {
-                    //     CLS_ERR("ERROR: processSkyFb %s", errmsg.c_str());
-                    //     CLS_ERR("ERROR: TablesErrCodes::%d", ret);
-                    //     return -1;
-                    // }
                     break;
                 }
                 case SFT_JSON:
@@ -2139,8 +2258,15 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                     assert (SkyFormatTypeNotRecognized==0);
                     break;
             } // end switch  
+            result_bl.append(reinterpret_cast<const char*>( \
+                             fbmeta_builder->GetBufferPointer()),
+                             fbmeta_builder->GetSize()
+            );
+            delete fbmeta_builder;
         } 
     }  
+    CLS_LOG(20, "stats_op.encoding result_bl size=%s", std::to_string(result_bl.length()).c_str());
+    ::encode(result_bl, *out);
     return 0;
 }
 

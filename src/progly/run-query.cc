@@ -358,9 +358,9 @@ int main(int argc, char **argv)
         assert (!index_cols.empty());
         assert (use_cls);
     }
-    if (runstats_args != "") {
-        assert (use_cls);
-    }
+    // if (runstats_args != "") {
+    //     assert (use_cls);
+    // }
 
     // set and validate the desired format types
     trans_format_type = sky_format_type_from_string(trans_format_str);
