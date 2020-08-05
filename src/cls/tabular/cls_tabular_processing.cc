@@ -2164,9 +2164,13 @@ int processStatsFb(
         // [min_limit - delta, right)
         // [.., max_limit + delta)
         // TODO: look for alternate options
+        std::string temp = to_string(val);
+        const float delta = 1e-5;
         for (auto it : hist) {
             auto limits = it.first;
-            if (val > limits.first && val < limits.second) {
+            if (val > limits.first - delta && val < limits.second) {
+                std::string lim1 =  to_string(limits.first);
+                std::string lim2 =  to_string(limits.second);
                 ++it.second;
                 break;
             }

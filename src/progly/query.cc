@@ -464,6 +464,26 @@ void worker_exec_runstats_op(librados::IoCtx *ioctx, stats_op op)
     ::encode(op, inbl);
     int ret = ioctx->exec(oid, "tabular", "exec_runstats_op", inbl, outbl);
     checkret(ret, 0);
+
+    ceph::bufferlist result;
+    if (outbl.length() >0) {
+        ceph::bufferlist::iterator it = outbl.begin();
+        try {
+            ::decode(result, it);  // unpack the result data bufferlist
+        }
+        catch (ceph::buffer::error&) {
+            std::cerr << "DEBUG: query.cc: exec_stats_op: failed to decode result data into a bufferlist" << std::endl;
+            assert(Tables::TablesErrCodes::EDECODE_BUFFERLIST_FAILURE==0);
+        }
+        if (debug) {
+            cout << "DEBUG: query.cc: exec_stats_op: decoded result.length()=" << result.length() << endl;
+        }
+    }
+    using namespace Tables;
+    sky_meta fbmeta = getSkyMeta(&result);
+    print_data(fbmeta.blob_data,
+                               fbmeta.blob_size,
+                               fbmeta.blob_format);
     // print_data(outbl);
   }
   ioctx->close();
