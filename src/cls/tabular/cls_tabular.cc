@@ -2085,6 +2085,7 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                                             errmsg,
                                             row_nums);
                             CLS_LOG(20, "returned value=%d", ret);
+                            CLS_LOG(20, "errmsg: %s", errmsg.c_str());
                             if (ret != 0) {
                                 CLS_ERR("ERROR: processStats %s", errmsg.c_str());
                                 CLS_ERR("ERROR: TablesErrCodes::%d", ret);

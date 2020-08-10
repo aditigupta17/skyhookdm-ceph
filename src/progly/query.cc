@@ -482,9 +482,8 @@ void worker_exec_runstats_op(librados::IoCtx *ioctx, stats_op op)
     using namespace Tables;
     sky_meta fbmeta = getSkyMeta(&result);
     print_data(fbmeta.blob_data,
-                               fbmeta.blob_size,
-                               fbmeta.blob_format);
-    // print_data(outbl);
+              fbmeta.blob_size,
+              fbmeta.blob_format);
   }
   ioctx->close();
 }

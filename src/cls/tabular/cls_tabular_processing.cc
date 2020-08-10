@@ -2137,6 +2137,7 @@ int processStatsFb(
     // eg, min = 1, max = 5, buckets = 3, width = 4/3
     // [1, 7/3] [7/3, 11/3] [11/3, 5]
     // [1, 2.33] 
+    // [a, b)
     std::map<std::pair<float, float>, int> hist;
     
     uint64_t buckets = s->bucketCount();
@@ -2165,13 +2166,16 @@ int processStatsFb(
         // [.., max_limit + delta)
         // TODO: look for alternate options
         std::string temp = to_string(val);
+        errmsg.append("Value to be pushed: " + temp + "\n");
         const float delta = 1e-5;
-        for (auto it : hist) {
+        for (auto &it : hist) {
             auto limits = it.first;
             if (val > limits.first - delta && val < limits.second) {
                 std::string lim1 =  to_string(limits.first);
                 std::string lim2 =  to_string(limits.second);
+                errmsg.append("Pushing it between: " + lim1 + " and " + lim2 + "\n");
                 ++it.second;
+                errmsg.append("Frequency: " + to_string(it.second) + "\n");
                 break;
             }
         }
