@@ -2245,7 +2245,10 @@ int exec_runstats_op(cls_method_context_t hctx, bufferlist *in, bufferlist *out)
                             // }
                             break;  
                         }
-                        default: CLS_ERR("ERROR: cls_tabular:exec_runstats_op: invalid column data type, cannot perform runstats");
+                        default: {
+                            CLS_ERR("ERROR: cls_tabular:exec_runstats_op: invalid column data type, cannot perform runstats");
+                            exit(1);
+                        } 
                     }
                     break;
                 }

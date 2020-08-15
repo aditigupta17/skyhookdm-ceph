@@ -2143,9 +2143,12 @@ int processStatsFb(
     uint64_t buckets = s->bucketCount();
     float min_value = s->MinVal();
     float max_value = s->MaxVal();
+    float sampling = s->samplingArg();
+    int increment = 1 / sampling;
 
     float width = (float)(max_value - min_value) / (float) (buckets);
     
+    // Histogram initialisation
     for (uint32_t i = 0; i < buckets; ++i) {
         hist[{min_value, min_value + width}] = 0;
         min_value += width;
@@ -2156,7 +2159,8 @@ int processStatsFb(
     Tables::col_info column = sv[0];
     int idx = column.idx;
 
-    for (uint32_t i = 0; i < nrows; ++i) {
+    // We skip rows by "increment" which denotes sampling
+    for (uint32_t i = 0; i < nrows; i += increment) {
         sky_rec rec = getSkyRec(static_cast<row_offs>(root.data_vec)->Get(i));
         auto row = rec.data.AsVector();
         // get values for particular column
@@ -2171,11 +2175,7 @@ int processStatsFb(
         for (auto &it : hist) {
             auto limits = it.first;
             if (val > limits.first - delta && val < limits.second) {
-                std::string lim1 =  to_string(limits.first);
-                std::string lim2 =  to_string(limits.second);
-                errmsg.append("Pushing it between: " + lim1 + " and " + lim2 + "\n");
                 ++it.second;
-                errmsg.append("Frequency: " + to_string(it.second) + "\n");
                 break;
             }
         }
