@@ -65,6 +65,7 @@ std::string qop_groupby_cols;
 std::string qop_orderby_cols;
 std::string qop_index_preds;
 std::string qop_index2_preds;
+std::string qop_runstats_args;
 
 // build index op params for flatbufs
 bool idx_op_idx_unique;
@@ -87,7 +88,7 @@ std::string qop_file_name;
 std::string qop_tree_name;
 
 // other exec flags
-bool runstats;
+string runstats;
 std::string project_cols;
 
 // prints full record header and metadata
@@ -404,8 +405,147 @@ void worker_exec_runstats_op(librados::IoCtx *ioctx, stats_op op)
     }
     std::string oid = target_objects.back();
     target_objects.pop_back();
-    std::cout << "computing stats...table: " << op.table_name << " oid: "
+    std::cout << "computing stats...table: " << op.runstats_args << " oid: "
               << oid << std::endl;
+
+    // Validating input
+    // Step-1 : Check if runstats_args has 5 arguments (col, min, max, bucket, sampling)
+    std::string arguments = op.runstats_args; 
+    boost::trim(arguments);
+    vector<std::string> args;
+    boost::split(args, arguments, boost::is_any_of(","),
+                 boost::token_compress_on);
+    assert(args.size() == 5);
+
+    // Step-2 : Check if the passed column is valid
+    std::string col = args[0];
+    std::string data_schema = op.data_schema;
+    
+    boost::trim(col);
+    boost::trim(data_schema);
+    
+    boost::to_upper(col);
+    
+    assert (!data_schema.empty());
+
+    Tables::schema_vec table_schema = Tables::schemaFromString(data_schema);
+    Tables::schema_vec sv = schemaFromColNames(table_schema, col);
+    if (sv.empty()) {
+      cerr << "Error: colname=" << col << " not present in schema."
+            << std::endl;
+      assert (Tables::TablesErrCodes::RequestedColNotPresent == 0);
+    }
+
+    // Step-3: Validate sampling argument: should be a float > 0 && <= 1
+    float sampling;
+    int err = Tables::strtofloat(args[4], &sampling);
+    if (err != 0) {
+      cerr << "Error: Invalid sampling data type." << std::endl;
+      exit(1);
+    }
+    if (!(sampling > 0 && sampling <= 1)) {
+      cerr << "Error: Invalid sampling value = " << sampling << " Should lie in range (0, 1]." << std::endl;
+      exit(1);
+    }
+
+    // Step-4 : Check number of buckets: should be int
+    uint64_t number_of_buckets;
+    err = Tables::strtou64(args[3], &number_of_buckets);
+    if (err != 0) {
+      cerr << "Error: Invalid number_of_buckets data type." << std::endl;
+      exit(1);
+    }
+
+    // Step-5: Get column data type, pack all arguments together and pass to function
+    Tables::col_info column = sv[0];
+    std::string min = args[1];
+    std::string max = args[2]; 
+    switch (column.type) {
+      case Tables::SkyDataType::SDT_INT8: {
+        Tables::StatsArgument<int8_t>* s = \
+              new Tables::StatsArgument<int8_t> \
+              (col, static_cast<int8_t>(std::stol(min)), static_cast<int8_t>(std::stol(max)),
+                number_of_buckets, sampling);
+        std::cout << s->toString() << "\n";
+        break;
+      }
+      case Tables::SkyDataType::SDT_INT16: {
+        Tables::StatsArgument<int16_t>* s = \
+              new Tables::StatsArgument<int16_t> \
+              (col, static_cast<int16_t>(std::stol(min)), static_cast<int16_t>(std::stol(max)),
+                number_of_buckets, sampling);
+        std::cout << s->toString() << "\n";
+        break;
+      }
+      case Tables::SkyDataType::SDT_INT32: {
+        Tables::StatsArgument<int32_t>* s = \
+            new Tables::StatsArgument<int32_t> \
+            (col, static_cast<int32_t>(std::stol(min)), static_cast<int32_t>(std::stol(max)),
+              number_of_buckets, sampling);
+        std::cout << s->toString() << "\n";
+        break;
+      }
+      case Tables::SkyDataType::SDT_INT64: {
+        Tables::StatsArgument<int64_t>* s = \
+              new Tables::StatsArgument<int64_t> \
+              (col, static_cast<int64_t>(std::stol(min)), static_cast<int64_t>(std::stol(max)),
+                number_of_buckets, sampling);
+        std::cout << s->toString() << "\n";  
+        break;
+      }
+      case Tables::SkyDataType::SDT_UINT8: {
+        Tables::StatsArgument<uint8_t>* s = \
+              new Tables::StatsArgument<uint8_t> \
+              (col, static_cast<uint8_t>(std::stol(min)), static_cast<uint8_t>(std::stol(max)),
+                number_of_buckets, sampling);
+        std::cout << s->toString() << "\n";  
+        break;
+      }
+      case Tables::SkyDataType::SDT_UINT16: {
+        Tables::StatsArgument<uint16_t>* s = \
+              new Tables::StatsArgument<uint16_t> \
+              (col, static_cast<uint16_t>(std::stol(min)), static_cast<uint16_t>(std::stol(max)),
+                number_of_buckets, sampling);
+        std::cout << s->toString() << "\n"; 
+        break;
+      }
+      case Tables::SkyDataType::SDT_UINT32: {
+        Tables::StatsArgument<uint32_t>* s = \
+              new Tables::StatsArgument<uint32_t> \
+              (col, static_cast<uint32_t>(std::stol(min)), static_cast<uint32_t>(std::stol(max)),
+                number_of_buckets, sampling);
+        std::cout << s->toString() << "\n";  
+        break;
+      }
+      case Tables::SkyDataType::SDT_UINT64: {
+        Tables::StatsArgument<uint64_t>* s = \
+              new Tables::StatsArgument<uint64_t> \
+              (col, static_cast<uint64_t>(std::stol(min)), static_cast<uint64_t>(std::stol(max)),
+                number_of_buckets, sampling);
+        std::cout << s->toString() << "\n";  
+        break;
+      }
+      case Tables::SkyDataType::SDT_FLOAT: {
+        Tables::StatsArgument<float>* s = \
+              new Tables::StatsArgument<float> \
+              (col, static_cast<float>(std::stol(min)), static_cast<float>(std::stol(max)),
+                number_of_buckets, sampling);
+        std::cout << s->toString() << "\n";    
+        break;
+      }
+      case Tables::SkyDataType::SDT_DOUBLE: {
+        Tables::StatsArgument<double>* s = \
+              new Tables::StatsArgument<double> \
+              (col, static_cast<double>(std::stol(min)), static_cast<double>(std::stol(max)),
+                number_of_buckets, sampling);
+        std::cout << s->toString() << "\n";    
+        break;  
+      }
+      default: assert (Tables::TablesErrCodes::UnknownSkyDataType == 0);
+    }
+
+    // bucket_min | bucket_max | count | dead_count | star_representation
+
     work_lock.unlock();
 
     ceph::bufferlist inbl, outbl;
