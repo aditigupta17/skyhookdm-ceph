@@ -80,7 +80,7 @@ int processSkyFbWASM(
         int* _row_nums,
         int _row_nums_size);
 
-//template<typename T>
+// template <typename T>
 int processStatsFb(
         flatbuffers::FlatBufferBuilder& flatbldr,
         schema_vec& data_schema,

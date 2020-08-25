@@ -2120,7 +2120,7 @@ int processSkyFbWASM(
     return errcode;
 }
 
-//template<typename T>
+//template <typename T>
 int processStatsFb(
         flatbuffers::FlatBufferBuilder& flatbldr,
         schema_vec& data_schema,
@@ -2171,6 +2171,7 @@ int processStatsFb(
         // TODO: look for alternate options
         std::string temp = to_string(val);
         errmsg.append("Value to be pushed: " + temp + "\n");
+        // O((N / sampling) * K): N = number of rows, K = number of buckets
         const float delta = 1e-5;
         for (auto &it : hist) {
             auto limits = it.first;
